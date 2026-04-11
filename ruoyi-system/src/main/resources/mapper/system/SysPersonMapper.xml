@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysPersonMapper">
+
+    <resultMap type="SysPerson" id="SysPersonResult">
+        <id     property="id"             column="id"              />
+        <result property="name"           column="name"            />
+        <result property="position"       column="position"        />
+        <result property="level"          column="level"           />
+        <result property="contact"        column="contact"         />
+        <result property="email"          column="email"           />
+        <result property="age"            column="age"             />
+        <result property="workYears"      column="work_years"      />
+        <result property="companyYears"   column="company_years"   />
+        <result property="education"      column="education"       />
+        <result property="school"         column="school"          />
+        <result property="hometown"       column="hometown"        />
+        <result property="entryDate"      column="entry_date"      />
+        <result property="status"         column="status"          />
+        <result property="delFlag"        column="del_flag"        />
+        <result property="createBy"       column="create_by"       />
+        <result property="createTime"     column="create_time"     />
+        <result property="updateBy"       column="update_by"       />
+        <result property="updateTime"     column="update_time"     />
+        <result property="remark"         column="remark"          />
+    </resultMap>
+
+    <sql id="selectPersonVo">
+        select id, name, position, level, contact, email, age, work_years, company_years,
+               education, school, hometown, entry_date, status, del_flag,
+               create_by, create_time, update_by, update_time, remark
+        from sys_person
+    </sql>
+
+    <select id="selectPersonList" parameterType="SysPerson" resultMap="SysPersonResult">
+        <include refid="selectPersonVo"/>
+        <where>
+            del_flag = '0'
+            <if test="name != null and name != ''">
+                AND name like concat('%', #{name}, '%')
+            </if>
+            <if test="position != null and position != ''">
+                AND position like concat('%', #{position}, '%')
+            </if>
+            <if test="level != null and level != ''">
+                AND level = #{level}
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+            <if test="education != null and education != ''">
+                AND education = #{education}
+            </if>
+        </where>
+        order by id desc
+    </select>
+
+    <select id="selectPersonAll" resultMap="SysPersonResult">
+        <include refid="selectPersonVo"/>
+        where del_flag = '0' and status = '在职'
+        order by name
+    </select>
+
+    <select id="selectPersonById" parameterType="Long" resultMap="SysPersonResult">
+        <include refid="selectPersonVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="selectPersonByName" parameterType="String" resultMap="SysPersonResult">
+        <include refid="selectPersonVo"/>
+        where name = #{name} and del_flag = '0'
+    </select>
+
+    <select id="checkNameUnique" parameterType="String" resultMap="SysPersonResult">
+        <include refid="selectPersonVo"/>
+        where name = #{name} and del_flag = '0' limit 1
+    </select>
+
+    <select id="countActivePerson" resultType="int">
+        select count(*) from sys_person where del_flag = '0' and status = '在职'
+    </select>
+
+    <select id="countInactivePerson" resultType="int">
+        select count(*) from sys_person where del_flag = '0' and status = '离职'
+    </select>
+
+    <insert id="insertPerson" parameterType="SysPerson" useGeneratedKeys="true" keyProperty="id">
+        insert into sys_person(
+            <if test="name != null and name != ''">name,</if>
+            <if test="position != null and position != ''">position,</if>
+            <if test="level != null and level != ''">level,</if>
+            <if test="contact != null and contact != ''">contact,</if>
+            <if test="email != null and email != ''">email,</if>
+            <if test="age != null">age,</if>
+            <if test="workYears != null">work_years,</if>
+            <if test="companyYears != null">company_years,</if>
+            <if test="education != null and education != ''">education,</if>
+            <if test="school != null and school != ''">school,</if>
+            <if test="hometown != null and hometown != ''">hometown,</if>
+            <if test="entryDate != null">entry_date,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="remark != null and remark != ''">remark,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            create_time
+        )values(
+            <if test="name != null and name != ''">#{name},</if>
+            <if test="position != null and position != ''">#{position},</if>
+            <if test="level != null and level != ''">#{level},</if>
+            <if test="contact != null and contact != ''">#{contact},</if>
+            <if test="email != null and email != ''">#{email},</if>
+            <if test="age != null">#{age},</if>
+            <if test="workYears != null">#{workYears},</if>
+            <if test="companyYears != null">#{companyYears},</if>
+            <if test="education != null and education != ''">#{education},</if>
+            <if test="school != null and school != ''">#{school},</if>
+            <if test="hometown != null and hometown != ''">#{hometown},</if>
+            <if test="entryDate != null">#{entryDate},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="remark != null and remark != ''">#{remark},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            sysdate()
+        )
+    </insert>
+
+    <update id="updatePerson" parameterType="SysPerson">
+        update sys_person
+        <set>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="position != null">position = #{position},</if>
+            <if test="level != null">level = #{level},</if>
+            <if test="contact != null">contact = #{contact},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="age != null">age = #{age},</if>
+            <if test="workYears != null">work_years = #{workYears},</if>
+            <if test="companyYears != null">company_years = #{companyYears},</if>
+            <if test="education != null">education = #{education},</if>
+            <if test="school != null">school = #{school},</if>
+            <if test="hometown != null">hometown = #{hometown},</if>
+            <if test="entryDate != null">entry_date = #{entryDate},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+            update_time = sysdate()
+        </set>
+        where id = #{id}
+    </update>
+
+    <delete id="deletePersonById" parameterType="Long">
+        update sys_person set del_flag = '2' where id = #{id}
+    </delete>
+
+    <delete id="deletePersonByIds" parameterType="Long">
+        update sys_person set del_flag = '2' where id in
+        <foreach collection="array" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+</mapper>

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysPersonProjectMapper">
+
+    <resultMap type="SysPersonProject" id="SysPersonProjectResult">
+        <id     property="id"              column="id"               />
+        <result property="personId"        column="person_id"        />
+        <result property="personName"      column="person_name"      />
+        <result property="projectId"       column="project_id"       />
+        <result property="projectName"     column="project_name"     />
+        <result property="role"            column="role"             />
+        <result property="involvementRate" column="involvement_rate" />
+        <result property="joinDate"        column="join_date"        />
+        <result property="delFlag"         column="del_flag"         />
+        <result property="createBy"        column="create_by"        />
+        <result property="createTime"      column="create_time"      />
+    </resultMap>
+
+    <sql id="selectPersonProjectVo">
+        select pp.id, pp.person_id, p.name as person_name, pp.project_id, pr.name as project_name,
+               pp.role, pp.involvement_rate, pp.join_date, pp.del_flag, pp.create_by, pp.create_time
+        from sys_person_project pp
+        left join sys_person p on pp.person_id = p.id
+        left join sys_project pr on pp.project_id = pr.id
+    </sql>
+
+    <select id="selectByPersonId" parameterType="Long" resultMap="SysPersonProjectResult">
+        <include refid="selectPersonProjectVo"/>
+        where pp.person_id = #{personId} and pp.del_flag = '0'
+        order by pp.create_time desc
+    </select>
+
+    <select id="selectByProjectId" parameterType="Long" resultMap="SysPersonProjectResult">
+        <include refid="selectPersonProjectVo"/>
+        where pp.project_id = #{projectId} and pp.del_flag = '0'
+        order by pp.create_time desc
+    </select>
+
+    <insert id="insert" parameterType="SysPersonProject" useGeneratedKeys="true" keyProperty="id">
+        insert into sys_person_project(
+            <if test="personId != null">person_id,</if>
+            <if test="projectId != null">project_id,</if>
+            <if test="role != null and role != ''">role,</if>
+            <if test="involvementRate != null">involvement_rate,</if>
+            <if test="joinDate != null">join_date,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            create_time
+        )values(
+            <if test="personId != null">#{personId},</if>
+            <if test="projectId != null">#{projectId},</if>
+            <if test="role != null and role != ''">#{role},</if>
+            <if test="involvementRate != null">#{involvementRate},</if>
+            <if test="joinDate != null">#{joinDate},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            sysdate()
+        )
+    </insert>
+
+    <delete id="deleteById" parameterType="Long">
+        update sys_person_project set del_flag = '2' where id = #{id}
+    </delete>
+
+    <delete id="deleteByPersonId" parameterType="Long">
+        update sys_person_project set del_flag = '2' where person_id = #{personId}
+    </delete>
+
+    <delete id="deleteByProjectId" parameterType="Long">
+        update sys_person_project set del_flag = '2' where project_id = #{projectId}
+    </delete>
+
+    <select id="countByPersonId" parameterType="Long" resultType="int">
+        select count(*) from sys_person_project where person_id = #{personId} and del_flag = '0'
+    </select>
+
+</mapper>

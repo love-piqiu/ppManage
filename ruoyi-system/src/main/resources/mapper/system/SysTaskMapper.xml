@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysTaskMapper">
+
+    <resultMap type="SysTask" id="SysTaskResult">
+        <id     property="id"                column="id"                 />
+        <result property="name"              column="name"               />
+        <result property="type"              column="type"               />
+        <result property="cycle"             column="cycle"              />
+        <result property="deadlineTime"      column="deadline_time"      />
+        <result property="deadlineDay"       column="deadline_day"       />
+        <result property="deadlineWeekday"   column="deadline_weekday"   />
+        <result property="status"            column="status"             />
+        <result property="description"       column="description"        />
+        <result property="remark"            column="remark"             />
+        <result property="delFlag"           column="del_flag"           />
+        <result property="createBy"          column="create_by"          />
+        <result property="createTime"        column="create_time"        />
+        <result property="updateBy"          column="update_by"          />
+        <result property="updateTime"        column="update_time"        />
+    </resultMap>
+
+    <sql id="selectTaskVo">
+        select id, name, type, cycle, deadline_time, deadline_day, deadline_weekday,
+               status, description, remark, del_flag, create_by, create_time, update_by, update_time
+        from sys_task
+    </sql>
+
+    <select id="selectTaskList" parameterType="SysTask" resultMap="SysTaskResult">
+        <include refid="selectTaskVo"/>
+        where del_flag = '0'
+        <if test="name != null and name != ''">
+            AND name like concat('%', #{name}, '%')
+        </if>
+        <if test="type != null and type != ''">
+            AND type = #{type}
+        </if>
+        <if test="cycle != null and cycle != ''">
+            AND cycle = #{cycle}
+        </if>
+        <if test="status != null and status != ''">
+            AND status = #{status}
+        </if>
+        order by create_time desc
+    </select>
+
+    <select id="selectActiveTaskAll" resultMap="SysTaskResult">
+        <include refid="selectTaskVo"/>
+        where del_flag = '0' and status = '启用'
+        order by name
+    </select>
+
+    <select id="selectTaskById" parameterType="Long" resultMap="SysTaskResult">
+        <include refid="selectTaskVo"/>
+        where id = #{id} and del_flag = '0'
+    </select>
+
+    <insert id="insertTask" parameterType="SysTask" useGeneratedKeys="true" keyProperty="id">
+        insert into sys_task(
+            <if test="name != null and name != ''">name,</if>
+            <if test="type != null and type != ''">type,</if>
+            <if test="cycle != null and cycle != ''">cycle,</if>
+            <if test="deadlineTime != null and deadlineTime != ''">deadline_time,</if>
+            <if test="deadlineDay != null">deadline_day,</if>
+            <if test="deadlineWeekday != null and deadlineWeekday != ''">deadline_weekday,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="description != null and description != ''">description,</if>
+            <if test="remark != null and remark != ''">remark,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            create_time
+        )values(
+            <if test="name != null and name != ''">#{name},</if>
+            <if test="type != null and type != ''">#{type},</if>
+            <if test="cycle != null and cycle != ''">#{cycle},</if>
+            <if test="deadlineTime != null and deadlineTime != ''">#{deadlineTime},</if>
+            <if test="deadlineDay != null">#{deadlineDay},</if>
+            <if test="deadlineWeekday != null and deadlineWeekday != ''">#{deadlineWeekday},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="description != null and description != ''">#{description},</if>
+            <if test="remark != null and remark != ''">#{remark},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            sysdate()
+        )
+    </insert>
+
+    <update id="updateTask" parameterType="SysTask">
+        update sys_task
+        <set>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="type != null and type != ''">type = #{type},</if>
+            <if test="cycle != null and cycle != ''">cycle = #{cycle},</if>
+            <if test="deadlineTime != null and deadlineTime != ''">deadline_time = #{deadlineTime},</if>
+            <if test="deadlineDay != null">deadline_day = #{deadlineDay},</if>
+            <if test="deadlineWeekday != null and deadlineWeekday != ''">deadline_weekday = #{deadlineWeekday},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="description != null and description != ''">description = #{description},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+            update_time = sysdate()
+        </set>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteTaskById" parameterType="Long">
+        update sys_task set del_flag = '2' where id = #{id}
+    </delete>
+
+    <delete id="deleteTaskByIds" parameterType="Long">
+        update sys_task set del_flag = '2' where id in
+        <foreach collection="array" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+</mapper>

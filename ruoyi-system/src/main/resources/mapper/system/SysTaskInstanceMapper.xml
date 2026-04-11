@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysTaskInstanceMapper">
+
+    <resultMap type="SysTaskInstance" id="SysTaskInstanceResult">
+        <id     property="id"              column="id"               />
+        <result property="taskId"          column="task_id"          />
+        <result property="taskName"        column="task_name"        />
+        <result property="personId"        column="person_id"        />
+        <result property="personName"      column="person_name"      />
+        <result property="period"          column="period"           />
+        <result property="deadline"        column="deadline"         />
+        <result property="completed"       column="completed"        />
+        <result property="completeTime"    column="complete_time"    />
+        <result property="onTime"          column="on_time"          />
+        <result property="remark"          column="remark"           />
+        <result property="delFlag"         column="del_flag"         />
+        <result property="createBy"        column="create_by"        />
+        <result property="createTime"      column="create_time"      />
+        <result property="updateBy"        column="update_by"        />
+        <result property="updateTime"      column="update_time"      />
+    </resultMap>
+
+    <sql id="selectInstanceVo">
+        select id, task_id, task_name, person_id, person_name, period, deadline,
+               completed, complete_time, on_time, remark, del_flag,
+               create_by, create_time, update_by, update_time
+        from sys_task_instance
+    </sql>
+
+    <select id="selectInstanceList" parameterType="SysTaskInstance" resultMap="SysTaskInstanceResult">
+        <include refid="selectInstanceVo"/>
+        where del_flag = '0'
+        <if test="taskId != null">
+            AND task_id = #{taskId}
+        </if>
+        <if test="personId != null">
+            AND person_id = #{personId}
+        </if>
+        <if test="period != null and period != ''">
+            AND period = #{period}
+        </if>
+        <if test="completed != null">
+            AND completed = #{completed}
+        </if>
+        order by deadline asc
+    </select>
+
+    <select id="selectInstanceById" parameterType="Long" resultMap="SysTaskInstanceResult">
+        <include refid="selectInstanceVo"/>
+        where id = #{id} and del_flag = '0'
+    </select>
+
+    <select id="selectByPersonAndPeriod" parameterType="map" resultMap="SysTaskInstanceResult">
+        <include refid="selectInstanceVo"/>
+        where person_id = #{personId} and period = #{period} and del_flag = '0'
+        order by deadline asc
+    </select>
+
+    <insert id="insertInstance" parameterType="SysTaskInstance" useGeneratedKeys="true" keyProperty="id">
+        insert into sys_task_instance(
+            <if test="taskId != null">task_id,</if>
+            <if test="taskName != null and taskName != ''">task_name,</if>
+            <if test="personId != null">person_id,</if>
+            <if test="personName != null and personName != ''">person_name,</if>
+            <if test="period != null and period != ''">period,</if>
+            <if test="deadline != null">deadline,</if>
+            <if test="completed != null">completed,</if>
+            <if test="completeTime != null">complete_time,</if>
+            <if test="onTime != null">on_time,</if>
+            <if test="remark != null and remark != ''">remark,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            create_time
+        )values(
+            <if test="taskId != null">#{taskId},</if>
+            <if test="taskName != null and taskName != ''">#{taskName},</if>
+            <if test="personId != null">#{personId},</if>
+            <if test="personName != null and personName != ''">#{personName},</if>
+            <if test="period != null and period != ''">#{period},</if>
+            <if test="deadline != null">#{deadline},</if>
+            <if test="completed != null">#{completed},</if>
+            <if test="completeTime != null">#{completeTime},</if>
+            <if test="onTime != null">#{onTime},</if>
+            <if test="remark != null and remark != ''">#{remark},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            sysdate()
+        )
+    </insert>
+
+    <update id="updateInstance" parameterType="SysTaskInstance">
+        update sys_task_instance
+        <set>
+            <if test="taskName != null and taskName != ''">task_name = #{taskName},</if>
+            <if test="personName != null and personName != ''">person_name = #{personName},</if>
+            <if test="deadline != null">deadline = #{deadline},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+            update_time = sysdate()
+        </set>
+        where id = #{id}
+    </update>
+
+    <update id="completeTask" parameterType="SysTaskInstance">
+        update sys_task_instance
+        set completed = #{completed},
+            complete_time = #{completeTime},
+            on_time = #{onTime},
+            update_by = #{updateBy},
+            update_time = sysdate()
+        where id = #{id}
+    </update>
+
+    <delete id="deleteInstanceById" parameterType="Long">
+        update sys_task_instance set del_flag = '2' where id = #{id}
+    </delete>
+
+    <delete id="deleteInstanceByTaskId" parameterType="Long">
+        update sys_task_instance set del_flag = '2' where task_id = #{taskId}
+    </delete>
+
+    <select id="countCompletionRate" parameterType="map" resultType="map">
+        select
+            count(*) as total,
+            sum(case when completed = 1 then 1 else 0 end) as completed_count,
+            sum(case when on_time = 1 then 1 else 0 end) as on_time_count
+        from sys_task_instance
+        where person_id = #{personId} and period = #{period} and del_flag = '0'
+    </select>
+
+    <select id="countTeamCompletionRate" parameterType="String" resultType="map">
+        select
+            count(*) as total,
+            sum(case when completed = 1 then 1 else 0 end) as completed_count,
+            sum(case when on_time = 1 then 1 else 0 end) as on_time_count
+        from sys_task_instance
+        where period = #{period} and del_flag = '0'
+    </select>
+
+</mapper>

@@ -1,0 +1,1305 @@
+/* ppManage 设计稿样式 - 公共样式 */
+
+:root {
+  --primary: #2563EB;
+  --primary-light: #3B82F6;
+  --primary-lighter: #93C5FD;
+  --success: #10B981;
+  --success-light: #6EE7B7;
+  --warning: #F59E0B;
+  --warning-light: #FCD34D;
+  --danger: #EF4444;
+  --danger-light: #FCA5A5;
+  --info: #6366F1;
+  --gray-50: #F9FAFB;
+  --gray-100: #F3F4F6;
+  --gray-200: #E5E7EB;
+  --gray-300: #D1D5DB;
+  --gray-400: #9CA3AF;
+  --gray-500: #6B7280;
+  --gray-600: #4B5563;
+  --gray-700: #374151;
+  --gray-800: #1F2937;
+  --gray-900: #111827;
+}
+
+/* 页面容器 - 设计稿风格 */
+.pp-page-container {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid var(--gray-200);
+  overflow: hidden;
+  margin: 24px;
+}
+
+/* 顶部导航 */
+.pp-top-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--gray-200);
+  background: var(--gray-50);
+}
+
+.pp-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--gray-500);
+}
+
+.pp-breadcrumb a {
+  color: var(--gray-500);
+  text-decoration: none;
+}
+
+.pp-breadcrumb a:hover {
+  color: var(--primary);
+}
+
+.pp-breadcrumb .current {
+  color: var(--gray-800);
+  font-weight: 500;
+}
+
+.pp-page-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* 按钮样式 */
+.pp-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pp-btn-primary {
+  background: var(--primary);
+  color: white;
+}
+
+.pp-btn-primary:hover {
+  background: var(--primary-light);
+}
+
+.pp-btn-secondary {
+  background: var(--gray-100);
+  color: var(--gray-700);
+}
+
+.pp-btn-secondary:hover {
+  background: var(--gray-200);
+}
+
+.pp-btn-success {
+  background: var(--success);
+  color: white;
+}
+
+.pp-btn-danger {
+  background: var(--danger);
+  color: white;
+}
+
+.pp-btn-sm {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+/* 筛选栏 */
+.pp-filter-bar {
+  display: flex;
+  gap: 16px;
+  padding: 16px 24px;
+  background: white;
+  border-bottom: 1px solid var(--gray-200);
+  flex-wrap: wrap;
+}
+
+.pp-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pp-filter-label {
+  font-size: 13px;
+  color: var(--gray-500);
+}
+
+/* 统计栏 */
+.pp-stats-bar {
+  display: flex;
+  gap: 32px;
+  padding: 12px 24px;
+  background: var(--gray-50);
+  border-bottom: 1px solid var(--gray-200);
+  font-size: 13px;
+}
+
+.pp-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pp-stat-num {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+/* 概览卡片 */
+.pp-overview-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  padding: 20px 24px;
+  background: white;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.pp-overview-card {
+  padding: 16px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.pp-overview-card.danger {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+.pp-overview-card.warning {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+}
+
+.pp-overview-card.success {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+}
+
+.pp-overview-card.info {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+}
+
+.pp-overview-card .num {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.pp-overview-card.danger .num {
+  color: var(--danger);
+}
+
+.pp-overview-card.warning .num {
+  color: var(--warning);
+}
+
+.pp-overview-card.success .num {
+  color: var(--success);
+}
+
+.pp-overview-card.info .num {
+  color: var(--primary);
+}
+
+.pp-overview-card .label {
+  font-size: 13px;
+  color: var(--gray-600);
+  margin-top: 6px;
+}
+
+/* 数据表格 */
+.pp-data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.pp-data-table th,
+.pp-data-table td {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 13px;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.pp-data-table th {
+  color: var(--gray-500);
+  font-weight: 500;
+  background: var(--gray-50);
+}
+
+.pp-data-table tr:hover td {
+  background: var(--gray-50);
+}
+
+.pp-data-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* 项目链接 */
+.pp-project-link {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.pp-project-link:hover {
+  text-decoration: underline;
+}
+
+.pp-project-link.danger {
+  color: var(--danger);
+}
+
+/* 预警徽章 */
+.pp-alert-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.pp-alert-badge.issue {
+  background: #fef2f2;
+  color: var(--danger);
+  border: 1px solid #fecaca;
+}
+
+.pp-alert-badge.risk {
+  background: #fffbeb;
+  color: var(--warning);
+  border: 1px solid #fde68a;
+}
+
+.pp-alert-badge:hover {
+  transform: scale(1.05);
+}
+
+/* 状态标签 */
+.pp-status-tag {
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  display: inline-block;
+}
+
+/* 项目状态 */
+.pp-status-tag.ongoing {
+  background: #eff6ff;
+  color: var(--primary);
+}
+
+.pp-status-tag.completed {
+  background: #f0fdf4;
+  color: var(--success);
+}
+
+.pp-status-tag.paused {
+  background: #fffbeb;
+  color: var(--warning);
+}
+
+/* 问题状态 */
+.pp-status-tag.pending {
+  background: #fef2f2;
+  color: var(--danger);
+}
+
+.pp-status-tag.progress {
+  background: #fffbeb;
+  color: var(--warning);
+}
+
+.pp-status-tag.resolved {
+  background: #f0fdf4;
+  color: var(--success);
+}
+
+.pp-status-tag.closed {
+  background: var(--gray-100);
+  color: var(--gray-500);
+}
+
+/* 风险状态 */
+.pp-status-tag.potential {
+  background: #fffbeb;
+  color: var(--warning);
+}
+
+.pp-status-tag.occurred {
+  background: #fef2f2;
+  color: var(--danger);
+}
+
+.pp-status-tag.eliminated {
+  background: #f0fdf4;
+  color: var(--success);
+}
+
+/* 人员状态 */
+.pp-status-tag.active {
+  background: #f0fdf4;
+  color: var(--success);
+}
+
+.pp-status-tag.inactive {
+  background: var(--gray-100);
+  color: var(--gray-500);
+}
+
+/* 严重程度/等级标签 */
+.pp-severity-tag {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.pp-severity-tag.high {
+  background: #fef2f2;
+  color: var(--danger);
+  border: 1px solid #fecaca;
+}
+
+.pp-severity-tag.medium {
+  background: #fffbeb;
+  color: var(--warning);
+  border: 1px solid #fde68a;
+}
+
+.pp-severity-tag.low {
+  background: #eff6ff;
+  color: var(--primary);
+  border: 1px solid #bfdbfe;
+}
+
+/* 风险等级标签 */
+.pp-level-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.pp-level-tag.high {
+  background: #fef2f2;
+  color: var(--danger);
+}
+
+.pp-level-tag.medium {
+  background: #fffbeb;
+  color: var(--warning);
+}
+
+.pp-level-tag.low {
+  background: #eff6ff;
+  color: var(--primary);
+}
+
+/* 类型标签 */
+.pp-type-tag {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.pp-type-tag.daily {
+  background: #DBEAFE;
+  color: #1D4ED8;
+}
+
+.pp-type-tag.weekly {
+  background: #FEF3C7;
+  color: #B45309;
+}
+
+.pp-type-tag.monthly {
+  background: #E0E7FF;
+  color: #4338CA;
+}
+
+/* 进度条 */
+.pp-progress-bar {
+  width: 80px;
+  height: 6px;
+  background: var(--gray-100);
+  border-radius: 3px;
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
+.pp-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--primary);
+}
+
+.pp-progress-text {
+  font-size: 12px;
+  color: var(--gray-600);
+}
+
+/* 操作按钮 */
+.pp-action-btns {
+  display: flex;
+  gap: 8px;
+}
+
+.pp-action-btn {
+  padding: 4px 8px;
+  font-size: 12px;
+  border: 1px solid var(--gray-200);
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--gray-600);
+}
+
+.pp-action-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.pp-action-btn.danger:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+/* 分页栏 */
+.pp-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background: var(--gray-50);
+  border-top: 1px solid var(--gray-200);
+  font-size: 13px;
+  color: var(--gray-500);
+}
+
+.pp-pagination-btns {
+  display: flex;
+  gap: 4px;
+}
+
+.pp-pagination-btn {
+  padding: 6px 12px;
+  border: 1px solid var(--gray-200);
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.pp-pagination-btn:hover {
+  background: var(--gray-50);
+}
+
+.pp-pagination-btn.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+/* Tab导航 */
+.pp-tab-nav {
+  display: flex;
+  border-bottom: 1px solid var(--gray-200);
+  background: white;
+}
+
+.pp-tab-item {
+  padding: 14px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-500);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.pp-tab-item:hover {
+  color: var(--gray-700);
+}
+
+.pp-tab-item.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+  background: #EFF6FF;
+}
+
+/* Tab内容 */
+.pp-tab-content {
+  padding: 24px;
+}
+
+/* 详情页样式 */
+.pp-detail-header {
+  padding: 24px;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.pp-detail-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.pp-detail-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin-bottom: 4px;
+}
+
+.pp-detail-subtitle {
+  font-size: 14px;
+  color: var(--gray-500);
+}
+
+.pp-info-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.pp-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pp-info-label {
+  font-size: 12px;
+  color: var(--gray-500);
+}
+
+.pp-info-value {
+  font-size: 14px;
+  color: var(--gray-800);
+  font-weight: 500;
+}
+
+/* 详情区块 */
+.pp-detail-section {
+  margin-bottom: 24px;
+}
+
+.pp-section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-700);
+  margin-bottom: 12px;
+}
+
+.pp-section-content {
+  padding: 16px;
+  background: var(--gray-50);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--gray-700);
+  line-height: 1.6;
+}
+
+/* 人员头像 */
+.pp-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.pp-avatar-large {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 28px;
+}
+
+.pp-person-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pp-person-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.pp-person-name {
+  font-weight: 500;
+  color: var(--gray-800);
+}
+
+.pp-person-contact {
+  font-size: 12px;
+  color: var(--gray-400);
+}
+
+/* 项目标签 */
+.pp-project-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.pp-project-tag {
+  padding: 2px 8px;
+  background: #eff6ff;
+  color: var(--primary);
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.pp-project-tag.more {
+  background: var(--gray-100);
+  color: var(--gray-500);
+}
+
+/* 等级标签（人员） */
+.pp-level-badge {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #eff6ff;
+  color: var(--primary);
+}
+
+/* 描述单元格 */
+.pp-desc-cell {
+  max-width: 280px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.pp-desc-cell:hover {
+  color: var(--primary);
+}
+
+/* 超期标记 */
+.pp-overdue {
+  color: var(--danger);
+  font-weight: 500;
+}
+
+/* 状态流转 */
+.pp-status-flow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  background: var(--gray-50);
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+.pp-flow-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid var(--gray-200);
+  font-size: 13px;
+}
+
+.pp-flow-step.active {
+  border-color: var(--primary);
+  background: #eff6ff;
+  color: var(--primary);
+  font-weight: 500;
+}
+
+.pp-flow-step.done {
+  border-color: var(--success);
+  background: #f0fdf4;
+  color: var(--success);
+}
+
+.pp-flow-arrow {
+  color: var(--gray-300);
+  font-size: 16px;
+}
+
+/* 空状态 */
+.pp-empty-tip {
+  text-align: center;
+  padding: 30px;
+  color: #909399;
+  font-size: 14px;
+}
+
+/* 项目卡片 */
+.pp-project-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.pp-project-card {
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.pp-project-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.pp-project-card-name {
+  font-weight: 600;
+  color: var(--gray-800);
+}
+
+.pp-project-card-rate {
+  font-size: 13px;
+  color: var(--gray-500);
+}
+
+.pp-project-card-bar {
+  height: 4px;
+  background: var(--gray-100);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.pp-project-card-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--primary);
+}
+
+/* 历史记录 */
+.pp-history-list {
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.pp-history-item {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.pp-history-item:last-child {
+  border-bottom: none;
+}
+
+.pp-history-time {
+  font-size: 12px;
+  color: var(--gray-500);
+  min-width: 80px;
+}
+
+.pp-history-content {
+  flex: 1;
+  font-size: 13px;
+  color: var(--gray-700);
+}
+
+/* 周数选择器 */
+.pp-week-selector {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px;
+  background: white;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.pp-week-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-700);
+}
+
+.pp-week-nav-btn {
+  padding: 6px 12px;
+  border: 1px solid var(--gray-200);
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.pp-week-nav-btn:hover {
+  background: var(--gray-50);
+}
+
+.pp-week-current {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--primary);
+  padding: 8px 16px;
+  background: #EFF6FF;
+  border-radius: 6px;
+}
+
+/* 统计卡片行 */
+.pp-stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  padding: 20px 24px;
+  background: white;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.pp-stat-card {
+  background: var(--gray-50);
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+  border-left: 4px solid var(--gray-300);
+}
+
+.pp-stat-card.success {
+  border-left-color: var(--success);
+}
+
+.pp-stat-card.warning {
+  border-left-color: var(--warning);
+}
+
+.pp-stat-card.danger {
+  border-left-color: var(--danger);
+}
+
+.pp-stat-card.info {
+  border-left-color: var(--primary);
+}
+
+.pp-stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--gray-800);
+}
+
+.pp-stat-label {
+  font-size: 13px;
+  color: var(--gray-500);
+  margin-top: 4px;
+}
+
+/* 任务卡片 */
+.pp-task-card {
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+
+.pp-task-card-header {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  cursor: pointer;
+  background: white;
+  transition: background 0.15s;
+}
+
+.pp-task-card-header:hover {
+  background: var(--gray-50);
+}
+
+.pp-task-card.expanded .pp-task-card-header {
+  background: #EFF6FF;
+}
+
+.pp-expand-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  color: var(--gray-400);
+  transition: transform 0.2s;
+}
+
+.pp-task-card.expanded .pp-expand-icon {
+  transform: rotate(90deg);
+}
+
+.pp-task-info {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.pp-task-name {
+  font-weight: 600;
+  color: var(--gray-800);
+  min-width: 180px;
+}
+
+.pp-task-deadline {
+  font-size: 13px;
+  color: var(--gray-500);
+}
+
+.pp-completion-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.pp-completion-numbers {
+  text-align: right;
+}
+
+.pp-completion-count {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.pp-completion-count .completed {
+  color: var(--success);
+}
+
+.pp-completion-count .total {
+  color: var(--gray-500);
+}
+
+.pp-completion-label {
+  font-size: 11px;
+  color: var(--gray-400);
+}
+
+.pp-completion-progress {
+  width: 120px;
+  height: 8px;
+  background: var(--gray-100);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.pp-completion-progress .fill {
+  height: 100%;
+  border-radius: 4px;
+}
+
+.pp-completion-progress .fill.high {
+  background: var(--success);
+}
+
+.pp-completion-progress .fill.medium {
+  background: var(--warning);
+}
+
+.pp-completion-progress .fill.low {
+  background: var(--danger);
+}
+
+.pp-completion-rate {
+  font-size: 14px;
+  font-weight: 600;
+  min-width: 50px;
+  text-align: right;
+}
+
+/* 任务展开内容 */
+.pp-task-expand-content {
+  display: none;
+  border-top: 1px solid var(--gray-100);
+  background: var(--gray-50);
+  padding: 16px;
+}
+
+.pp-task-card.expanded .pp-task-expand-content {
+  display: block;
+}
+
+.pp-expand-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-700);
+  margin-bottom: 12px;
+}
+
+/* 人员状态网格 */
+.pp-person-status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+}
+
+.pp-person-status-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid var(--gray-200);
+  font-size: 12px;
+}
+
+.pp-person-status-item.done {
+  border-color: var(--success);
+  background: #f0fdf4;
+}
+
+.pp-person-status-item.pending {
+  border-color: var(--warning);
+  background: #fffbeb;
+}
+
+.pp-person-status-item.overdue {
+  border-color: var(--danger);
+  background: #fef2f2;
+}
+
+.pp-person-status-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pp-person-status-name {
+  flex: 1;
+  color: var(--gray-700);
+}
+
+.pp-person-status-icon {
+  font-size: 14px;
+}
+
+.pp-person-status-item.done .pp-person-status-icon {
+  color: var(--success);
+}
+
+.pp-person-status-item.pending .pp-person-status-icon {
+  color: var(--warning);
+}
+
+.pp-person-status-item.overdue .pp-person-status-icon {
+  color: var(--danger);
+}
+
+/* 风险等级显示 */
+.pp-risk-level {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+}
+
+.pp-risk-level.high {
+  color: var(--danger);
+}
+
+.pp-risk-level.medium {
+  color: var(--warning);
+}
+
+.pp-risk-level.low {
+  color: var(--success);
+}
+
+.pp-risk-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.pp-risk-dot.high {
+  background: var(--danger);
+}
+
+.pp-risk-dot.medium {
+  background: var(--warning);
+}
+
+.pp-risk-dot.low {
+  background: var(--success);
+}
+
+/* 报告样式 */
+.pp-report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.pp-report-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--gray-800);
+}
+
+.pp-report-date {
+  font-size: 13px;
+  color: var(--gray-500);
+  margin-top: 4px;
+}
+
+.pp-report-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.pp-report-content {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  padding: 24px;
+}
+
+.pp-report-section {
+  margin-bottom: 24px;
+}
+
+.pp-report-section:last-child {
+  margin-bottom: 0;
+}
+
+.pp-report-section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--gray-800);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--primary);
+  display: inline-block;
+}
+
+/* 统计网格 */
+.pp-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.pp-grid-stat-item {
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+}
+
+.pp-grid-stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--gray-800);
+}
+
+.pp-grid-stat-label {
+  font-size: 12px;
+  color: var(--gray-500);
+  margin-top: 4px;
+}
+
+/* 配置区域 */
+.pp-config-section {
+  background: white;
+  border-radius: 8px;
+  border: 1px solid var(--gray-200);
+  padding: 24px;
+}
+
+.pp-config-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--gray-800);
+  margin-bottom: 16px;
+}
+
+/* 表单样式 */
+.pp-form-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.pp-form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.pp-form-group.full {
+  grid-column: span 2;
+}
+
+.pp-form-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray-700);
+  margin-bottom: 6px;
+}
+
+.pp-form-input {
+  padding: 8px 12px;
+  border: 1px solid var(--gray-200);
+  border-radius: 6px;
+  font-size: 14px;
+  color: var(--gray-800);
+  background: white;
+}
+
+.pp-form-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}

@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysProjectMapper">
+
+    <resultMap type="SysProject" id="SysProjectResult">
+        <id     property="id"              column="id"               />
+        <result property="name"            column="name"             />
+        <result property="customer"        column="customer"         />
+        <result property="pmId"            column="pm_id"            />
+        <result property="pmName"          column="pm_name"          />
+        <result property="salesId"         column="sales_id"         />
+        <result property="salesName"       column="sales_name"       />
+        <result property="cost"            column="cost"             />
+        <result property="costUsed"        column="cost_used"        />
+        <result property="workHours"       column="work_hours"       />
+        <result property="workHoursUsed"   column="work_hours_used"  />
+        <result property="progress"        column="progress"         />
+        <result property="stage"           column="stage"            />
+        <result property="status"          column="status"           />
+        <result property="startDate"       column="start_date"       />
+        <result property="endDate"         column="end_date"         />
+        <result property="actualEndDate"   column="actual_end_date"  />
+        <result property="remark"          column="remark"           />
+        <result property="delFlag"         column="del_flag"         />
+        <result property="createBy"        column="create_by"        />
+        <result property="createTime"      column="create_time"      />
+        <result property="updateBy"        column="update_by"        />
+        <result property="updateTime"      column="update_time"      />
+    </resultMap>
+
+    <sql id="selectProjectVo">
+        select id, name, customer, pm_id, pm_name, sales_id, sales_name,
+               cost, cost_used, work_hours, work_hours_used, progress, stage, status,
+               start_date, end_date, actual_end_date, remark, del_flag,
+               create_by, create_time, update_by, update_time
+        from sys_project
+    </sql>
+
+    <select id="selectProjectList" parameterType="SysProject" resultMap="SysProjectResult">
+        <include refid="selectProjectVo"/>
+        where del_flag = '0'
+        <if test="name != null and name != ''">
+            AND name like concat('%', #{name}, '%')
+        </if>
+        <if test="customer != null and customer != ''">
+            AND customer like concat('%', #{customer}, '%')
+        </if>
+        <if test="pmId != null">
+            AND pm_id = #{pmId}
+        </if>
+        <if test="salesId != null">
+            AND sales_id = #{salesId}
+        </if>
+        <if test="status != null and status != ''">
+            AND status = #{status}
+        </if>
+        <if test="stage != null and stage != ''">
+            AND stage like concat('%', #{stage}, '%')
+        </if>
+        order by create_time desc
+    </select>
+
+    <select id="selectProjectAll" resultMap="SysProjectResult">
+        <include refid="selectProjectVo"/>
+        where del_flag = '0'
+        order by name
+    </select>
+
+    <select id="selectProjectById" parameterType="Long" resultMap="SysProjectResult">
+        <include refid="selectProjectVo"/>
+        where id = #{id} and del_flag = '0'
+    </select>
+
+    <select id="selectProjectByName" parameterType="String" resultMap="SysProjectResult">
+        <include refid="selectProjectVo"/>
+        where name = #{name} and del_flag = '0' limit 1
+    </select>
+
+    <select id="checkNameUnique" parameterType="String" resultMap="SysProjectResult">
+        <include refid="selectProjectVo"/>
+        where name = #{name} and del_flag = '0' limit 1
+    </select>
+
+    <insert id="insertProject" parameterType="SysProject" useGeneratedKeys="true" keyProperty="id">
+        insert into sys_project(
+            <if test="name != null and name != ''">name,</if>
+            <if test="customer != null and customer != ''">customer,</if>
+            <if test="pmId != null">pm_id,</if>
+            <if test="pmName != null and pmName != ''">pm_name,</if>
+            <if test="salesId != null">sales_id,</if>
+            <if test="salesName != null and salesName != ''">sales_name,</if>
+            <if test="cost != null">cost,</if>
+            <if test="costUsed != null">cost_used,</if>
+            <if test="workHours != null">work_hours,</if>
+            <if test="workHoursUsed != null">work_hours_used,</if>
+            <if test="progress != null">progress,</if>
+            <if test="stage != null and stage != ''">stage,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="startDate != null">start_date,</if>
+            <if test="endDate != null">end_date,</if>
+            <if test="actualEndDate != null">actual_end_date,</if>
+            <if test="remark != null and remark != ''">remark,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            create_time
+        )values(
+            <if test="name != null and name != ''">#{name},</if>
+            <if test="customer != null and customer != ''">#{customer},</if>
+            <if test="pmId != null">#{pmId},</if>
+            <if test="pmName != null and pmName != ''">#{pmName},</if>
+            <if test="salesId != null">#{salesId},</if>
+            <if test="salesName != null and salesName != ''">#{salesName},</if>
+            <if test="cost != null">#{cost},</if>
+            <if test="costUsed != null">#{costUsed},</if>
+            <if test="workHours != null">#{workHours},</if>
+            <if test="workHoursUsed != null">#{workHoursUsed},</if>
+            <if test="progress != null">#{progress},</if>
+            <if test="stage != null and stage != ''">#{stage},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="startDate != null">#{startDate},</if>
+            <if test="endDate != null">#{endDate},</if>
+            <if test="actualEndDate != null">#{actualEndDate},</if>
+            <if test="remark != null and remark != ''">#{remark},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            sysdate()
+        )
+    </insert>
+
+    <update id="updateProject" parameterType="SysProject">
+        update sys_project
+        <set>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="customer != null and customer != ''">customer = #{customer},</if>
+            <if test="pmId != null">pm_id = #{pmId},</if>
+            <if test="pmName != null and pmName != ''">pm_name = #{pmName},</if>
+            <if test="salesId != null">sales_id = #{salesId},</if>
+            <if test="salesName != null and salesName != ''">sales_name = #{salesName},</if>
+            <if test="cost != null">cost = #{cost},</if>
+            <if test="costUsed != null">cost_used = #{costUsed},</if>
+            <if test="workHours != null">work_hours = #{workHours},</if>
+            <if test="workHoursUsed != null">work_hours_used = #{workHoursUsed},</if>
+            <if test="progress != null">progress = #{progress},</if>
+            <if test="stage != null and stage != ''">stage = #{stage},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="startDate != null">start_date = #{startDate},</if>
+            <if test="endDate != null">end_date = #{endDate},</if>
+            <if test="actualEndDate != null">actual_end_date = #{actualEndDate},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+            update_time = sysdate()
+        </set>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteProjectById" parameterType="Long">
+        update sys_project set del_flag = '2' where id = #{id}
+    </delete>
+
+    <delete id="deleteProjectByIds" parameterType="Long">
+        update sys_project set del_flag = '2' where id in
+        <foreach collection="array" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="countActiveProject" resultType="int">
+        select count(*) from sys_project where status = '进行中' and del_flag = '0'
+    </select>
+
+    <select id="countCompletedProject" resultType="int">
+        select count(*) from sys_project where status = '已完成' and del_flag = '0'
+    </select>
+
+</mapper>

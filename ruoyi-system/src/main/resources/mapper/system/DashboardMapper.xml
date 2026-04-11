@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.DashboardMapper">
+
+    <!-- 项目统计 -->
+    <select id="countActiveProjects" resultType="int">
+        SELECT COUNT(*) FROM sys_project WHERE status = '进行中'
+    </select>
+
+    <!-- 问题统计 -->
+    <select id="countPendingIssues" resultType="int">
+        SELECT COUNT(*) FROM sys_issue WHERE status IN ('待处理', '进行中')
+    </select>
+
+    <select id="countHighPriorityIssues" resultType="int">
+        SELECT COUNT(*) FROM sys_issue WHERE severity = '高' AND status IN ('待处理', '进行中')
+    </select>
+
+    <select id="countIssuesByStatus" resultType="int">
+        SELECT COUNT(*) FROM sys_issue WHERE status = #{status}
+    </select>
+
+    <!-- 风险统计 -->
+    <select id="countPotentialRisks" resultType="int">
+        SELECT COUNT(*) FROM sys_risk WHERE status = '潜在'
+    </select>
+
+    <select id="countHighRisks" resultType="int">
+        SELECT COUNT(*) FROM sys_risk WHERE level = '高' AND status = '潜在'
+    </select>
+
+    <select id="countRisksByLevel" resultType="int">
+        SELECT COUNT(*) FROM sys_risk WHERE level = #{level}
+    </select>
+
+    <select id="countRisksByStatus" resultType="int">
+        SELECT COUNT(*) FROM sys_risk WHERE status = #{status}
+    </select>
+
+    <!-- 任务统计 - 简化查询，基于任务实例表 -->
+    <select id="countOverdueTasks" resultType="int">
+        SELECT COUNT(*) FROM sys_task_instance ti
+        LEFT JOIN sys_task t ON ti.task_id = t.id
+        WHERE ti.completed = 0
+        AND CONCAT(CURDATE(), ' ', IFNULL(t.deadline_time, '18:00:00')) &lt; NOW()
+    </select>
+
+    <select id="countWeekDueTasks" resultType="int">
+        SELECT COUNT(*) FROM sys_task_instance ti
+        LEFT JOIN sys_task t ON ti.task_id = t.id
+        WHERE ti.completed = 0
+        AND YEARWEEK(DATE(CONCAT(CURDATE(), ' ', IFNULL(t.deadline_time, '18:00:00'))), 1) = YEARWEEK(CURDATE(), 1)
+    </select>
+
+    <select id="countTotalTasksThisWeek" resultType="int">
+        SELECT COUNT(*) FROM sys_task_instance
+        WHERE YEARWEEK(create_time, 1) = YEARWEEK(CURDATE(), 1)
+    </select>
+
+    <select id="countCompletedTasksThisWeek" resultType="int">
+        SELECT COUNT(*) FROM sys_task_instance
+        WHERE completed = 1
+        AND YEARWEEK(create_time, 1) = YEARWEEK(CURDATE(), 1)
+    </select>
+
+    <select id="countOnTimeTasksThisWeek" resultType="int">
+        SELECT COUNT(*) FROM sys_task_instance
+        WHERE completed = 1 AND on_time = 1
+        AND YEARWEEK(create_time, 1) = YEARWEEK(CURDATE(), 1)
+    </select>
+
+    <select id="countLateTasksThisWeek" resultType="int">
+        SELECT COUNT(*) FROM sys_task_instance
+        WHERE completed = 1 AND on_time = 0
+        AND YEARWEEK(create_time, 1) = YEARWEEK(CURDATE(), 1)
+    </select>
+
+    <select id="countIncompleteTasksThisWeek" resultType="int">
+        SELECT COUNT(*) FROM sys_task_instance
+        WHERE completed = 0
+        AND YEARWEEK(create_time, 1) = YEARWEEK(CURDATE(), 1)
+    </select>
+
+    <select id="countTasksByDateAndStatus" resultType="int">
+        SELECT COUNT(*) FROM sys_task_instance ti
+        LEFT JOIN sys_task t ON ti.task_id = t.id
+        WHERE DATE(ti.create_time) = #{date}
+        <choose>
+            <when test="status == 'ontime'">
+                AND ti.completed = 1 AND ti.on_time = 1
+            </when>
+            <when test="status == 'late'">
+                AND ti.completed = 1 AND ti.on_time = 0
+            </when>
+            <when test="status == 'incomplete'">
+                AND ti.completed = 0
+            </when>
+        </choose>
+    </select>
+
+    <!-- 最近问题列表 -->
+    <select id="selectRecentIssues" resultType="java.util.Map">
+        SELECT i.id, i.description, i.severity, i.status,
+               p.name as projectName
+        FROM sys_issue i
+        LEFT JOIN sys_project p ON i.project_id = p.id
+        ORDER BY i.create_time DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 最近风险列表 -->
+    <select id="selectRecentRisks" resultType="java.util.Map">
+        SELECT r.id, r.description, r.level, r.status,
+               p.name as projectName
+        FROM sys_risk r
+        LEFT JOIN sys_project p ON r.project_id = p.id
+        WHERE r.status != '已消除'
+        ORDER BY r.create_time DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 项目进度列表 -->
+    <select id="selectProjectProgress" resultType="java.util.Map">
+        SELECT id, name, customer, pm_name as pmName, stage, progress, status
+        FROM sys_project
+        WHERE status = '进行中'
+        ORDER BY update_time DESC
+    </select>
+
+</mapper>

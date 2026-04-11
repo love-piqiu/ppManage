@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysEmailConfigMapper">
+
+    <resultMap type="SysEmailConfig" id="SysEmailConfigResult">
+        <id     property="id"              column="id"               />
+        <result property="host"            column="host"             />
+        <result property="port"            column="port"             />
+        <result property="username"        column="username"         />
+        <result property="password"        column="password"         />
+        <result property="recipientEmail"  column="recipient_email"  />
+        <result property="senderName"      column="sender_name"      />
+        <result property="emailSubject"    column="email_subject"    />
+        <result property="sendDay"         column="send_day"         />
+        <result property="sendTime"        column="send_time"        />
+        <result property="enabled"         column="enabled"          />
+        <result property="createBy"        column="create_by"        />
+        <result property="createTime"      column="create_time"      />
+        <result property="updateBy"        column="update_by"        />
+        <result property="updateTime"      column="update_time"      />
+    </resultMap>
+
+    <select id="selectConfig" resultMap="SysEmailConfigResult">
+        select id, host, port, username, password, recipient_email, sender_name,
+               email_subject, send_day, send_time, enabled, create_by, create_time, update_by, update_time
+        from sys_email_config
+        limit 1
+    </select>
+
+    <update id="updateConfig" parameterType="SysEmailConfig">
+        update sys_email_config
+        <set>
+            <if test="host != null and host != ''">host = #{host},</if>
+            <if test="port != null">port = #{port},</if>
+            <if test="username != null and username != ''">username = #{username},</if>
+            <if test="password != null and password != ''">password = #{password},</if>
+            <if test="recipientEmail != null and recipientEmail != ''">recipient_email = #{recipientEmail},</if>
+            <if test="senderName != null and senderName != ''">sender_name = #{senderName},</if>
+            <if test="emailSubject != null and emailSubject != ''">email_subject = #{emailSubject},</if>
+            <if test="sendDay != null and sendDay != ''">send_day = #{sendDay},</if>
+            <if test="sendTime != null and sendTime != ''">send_time = #{sendTime},</if>
+            <if test="enabled != null">enabled = #{enabled},</if>
+            <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+            update_time = sysdate()
+        </set>
+        where id = #{id}
+    </update>
+
+</mapper>
