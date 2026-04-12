@@ -120,7 +120,10 @@
       "Bash(scp -r /Users/qiuzhao/workspace/ppManage/ruoyi-ui/dist/* root@123.56.191.180:/opt/ppmanage/ruoyi-ui/dist/)",
       "Bash(ssh root@123.56.191.180 \"echo '连接成功'\")",
       "Bash(expect -c ':*)",
-      "Bash(scp /Users/qiuzhao/workspace/ppManage/sql/invoice.sql aliyun-ecs:/tmp/invoice.sql)"
+      "Bash(scp /Users/qiuzhao/workspace/ppManage/sql/invoice.sql aliyun-ecs:/tmp/invoice.sql)",
+      "Bash(gh repo:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(git fetch:*)"
     ]
   }
 }
