@@ -1,6 +1,8 @@
 package com.ruoyi.web.controller.system;
 
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -184,5 +186,37 @@ public class SysTaskController extends BaseController
     {
         int rate = instanceService.getTeamCompletionRate(period);
         return success(rate);
+    }
+
+    /**
+     * 获取某周期的完整统计数据（包括所有任务和人员的实例）
+     */
+    @PreAuthorize("@ss.hasPermi('system:task:query')")
+    @GetMapping("/statistics/period/{period}")
+    public AjaxResult getPeriodStatistics(@PathVariable String period)
+    {
+        Map<String, Object> result = new HashMap<>();
+        // 获取该周期所有实例
+        List<SysTaskInstance> instances = instanceService.selectByPeriod(period);
+        // 计算统计数据
+        int total = instances.size();
+        int completed = (int) instances.stream().filter(i -> i.getCompleted() == 1).count();
+        int pending = (int) instances.stream().filter(i -> i.getCompleted() == 0 && !isOverdue(i.getDeadline())).count();
+        int overdue = (int) instances.stream().filter(i -> i.getCompleted() == 0 && isOverdue(i.getDeadline())).count();
+        int rate = total > 0 ? completed * 100 / total : 0;
+
+        result.put("total", total);
+        result.put("completed", completed);
+        result.put("pending", pending);
+        result.put("overdue", overdue);
+        result.put("rate", rate);
+        result.put("instances", instances);
+        return success(result);
+    }
+
+    private boolean isOverdue(java.util.Date deadline)
+    {
+        if (deadline == null) return false;
+        return deadline.before(new java.util.Date());
     }
 }

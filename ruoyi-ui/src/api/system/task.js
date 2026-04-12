@@ -101,3 +101,11 @@ export function getTeamCompletionRate(period) {
     method: 'get'
   })
 }
+
+// 获取某周期的完整统计数据
+export function getPeriodStatistics(period) {
+  return request({
+    url: '/system/task/statistics/period/' + period,
+    method: 'get'
+  })
+}

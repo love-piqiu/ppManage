@@ -61,9 +61,13 @@ INSERT INTO sys_menu (menu_id, menu_name, parent_id, order_num, path, component,
 (2043, '任务修改', 2040, 3, '', '', 1, 0, 'F', '0', '0', 'system:task:edit', '#', 'admin', NOW()),
 (2044, '任务删除', 2040, 4, '', '', 1, 0, 'F', '0', '0', 'system:task:remove', '#', 'admin', NOW());
 
--- 7. 周报生成
+-- 7. 周报管理
 INSERT INTO sys_menu (menu_id, menu_name, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, remark)
-VALUES (2050, '周报生成', 0, 7, 'report', 'report/index', 1, 0, 'C', '0', '0', 'report:view', 'documentation', 'admin', NOW(), '周报生成菜单');
+VALUES (2050, '周报管理', 0, 7, 'report', 'system/report/index', 1, 0, 'C', '0', '0', 'report:weekly:view', 'documentation', 'admin', NOW(), '周报管理菜单');
+
+INSERT INTO sys_menu (menu_id, menu_name, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time) VALUES
+(2051, '周报查看', 2050, 1, '', '', 1, 0, 'F', '0', '0', 'report:weekly:view', '#', 'admin', NOW()),
+(2052, '周报发送', 2050, 2, '', '', 1, 0, 'F', '0', '0', 'report:weekly:send', '#', 'admin', NOW());
 
 -- 8. 邮件配置 (放在系统管理下，parent_id=1 是系统管理)
 INSERT INTO sys_menu (menu_id, menu_name, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, remark)

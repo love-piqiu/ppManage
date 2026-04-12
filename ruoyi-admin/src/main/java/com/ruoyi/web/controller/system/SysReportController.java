@@ -17,6 +17,8 @@ import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.system.service.ISysReportService;
 import com.ruoyi.system.service.ISysEmailService;
+import com.ruoyi.system.domain.SysEmailConfig;
+import com.ruoyi.system.service.ISysEmailConfigService;
 
 /**
  * 周报信息操作处理
@@ -32,6 +34,31 @@ public class SysReportController extends BaseController
 
     @Autowired
     private ISysEmailService emailService;
+
+    @Autowired
+    private ISysEmailConfigService emailConfigService;
+
+    /**
+     * 获取周报完整数据（新版接口）
+     */
+    @PreAuthorize("@ss.hasPermi('report:weekly:view')")
+    @GetMapping("/weekly/data")
+    public AjaxResult getWeeklyReportData(@RequestParam(required = false) String startDate,
+                                          @RequestParam(required = false) String endDate)
+    {
+        if (startDate == null || endDate == null)
+        {
+            Calendar cal = Calendar.getInstance();
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+            startDate = sdf.format(cal.getTime());
+            cal.add(Calendar.DAY_OF_WEEK, 6);
+            endDate = sdf.format(cal.getTime());
+        }
+
+        Map<String, Object> data = reportService.getWeeklyReportData(startDate, endDate);
+        return success(data);
+    }
 
     /**
      * 生成周报内容
@@ -104,5 +131,58 @@ public class SysReportController extends BaseController
 
         boolean result = emailService.sendWeeklyReport(subject, html);
         return result ? success("邮件发送成功") : error("邮件发送失败");
+    }
+
+    /**
+     * 获取邮件配置
+     */
+    @PreAuthorize("@ss.hasPermi('report:weekly:view')")
+    @GetMapping("/email/config")
+    public AjaxResult getEmailConfig()
+    {
+        SysEmailConfig config = emailConfigService.getConfig();
+        return success(config);
+    }
+
+    /**
+     * 保存邮件配置
+     */
+    @PreAuthorize("@ss.hasPermi('report:weekly:edit')")
+    @Log(title = "邮件配置", businessType = BusinessType.UPDATE)
+    @PostMapping("/email/config")
+    public AjaxResult saveEmailConfig(@RequestBody SysEmailConfig config)
+    {
+        config.setUpdateBy(getUsername());
+        return toAjax(emailConfigService.updateConfig(config));
+    }
+
+    /**
+     * 发送测试邮件
+     */
+    @PreAuthorize("@ss.hasPermi('report:weekly:edit')")
+    @Log(title = "邮件配置", businessType = BusinessType.OTHER)
+    @PostMapping("/email/test")
+    public AjaxResult testEmail(@RequestBody SysEmailConfig config)
+    {
+        boolean result = emailService.sendTestEmail();
+        return result ? success("测试邮件已发送") : error("发送失败，请检查配置");
+    }
+
+    /**
+     * 获取邮件预览HTML
+     */
+    @PreAuthorize("@ss.hasPermi('report:weekly:view')")
+    @GetMapping("/email/preview")
+    public AjaxResult getEmailPreview()
+    {
+        Calendar cal = Calendar.getInstance();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+        String startDate = sdf.format(cal.getTime());
+        cal.add(Calendar.DAY_OF_WEEK, 6);
+        String endDate = sdf.format(cal.getTime());
+
+        String html = reportService.generateEmailPreviewHtml(startDate, endDate);
+        return success(html);
     }
 }

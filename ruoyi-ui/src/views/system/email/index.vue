@@ -44,8 +44,8 @@
           <el-switch v-model="form.enabled" :active-value="1" :inactive-value="0" />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="submitForm">保存配置</el-button>
-          <el-button type="success" @click="handleTest">发送测试邮件</el-button>
+          <button class="pp-btn pp-btn-primary" @click="submitForm">保存配置</button>
+          <button class="pp-btn pp-btn-success" @click="handleTest">发送测试邮件</button>
         </el-form-item>
       </el-form>
     </el-card>

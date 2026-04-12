@@ -81,7 +81,7 @@ public interface SysTaskInstanceMapper
      * @param params 查询参数
      * @return 统计结果
      */
-    public Map<String, Integer> countCompletionRate(Map<String, Object> params);
+    public Map<String, Object> countCompletionRate(Map<String, Object> params);
 
     /**
      * 统计本周团队完成率
@@ -89,5 +89,13 @@ public interface SysTaskInstanceMapper
      * @param period 周期
      * @return 统计结果
      */
-    public Map<String, Integer> countTeamCompletionRate(String period);
+    public Map<String, Object> countTeamCompletionRate(String period);
+
+    /**
+     * 查询某周期的所有任务实例
+     *
+     * @param period 周期
+     * @return 任务实例列表
+     */
+    public List<SysTaskInstance> selectByPeriod(String period);
 }

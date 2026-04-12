@@ -10,8 +10,8 @@ ruoyi:
   profile: D:/ppManage/uploadPath
   # 获取ip地址开关
   addressEnabled: false
-  # 验证码类型 math 数字计算 char 字符验证
-  captchaType: math
+  # 验证码类型 math 数字计算 char 字符验证 none 关闭验证码
+  captchaType: none
 
 # 开发环境配置
 server:

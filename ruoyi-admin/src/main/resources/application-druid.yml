@@ -6,8 +6,8 @@ spring:
         druid:
             # 主库数据源
             master:
-                url: jdbc:mysql://123.56.191.180:3306/ppmmanage?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=GMT%2B8
-                username: ppmmanage
+                url: jdbc:mysql://123.56.191.180:3306/ppmmanage?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=GMT%2B8&allowPublicKeyRetrieval=true
+                username: ppmanage
                 password: Ppmanage@2025!
             # 从库数据源
             slave:

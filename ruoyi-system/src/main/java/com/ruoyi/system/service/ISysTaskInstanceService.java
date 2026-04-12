@@ -86,4 +86,12 @@ public interface ISysTaskInstanceService
      * @return 统计列表
      */
     public List<Map<String, Object>> getPersonCompletionList(String period);
+
+    /**
+     * 查询某周期的所有任务实例
+     *
+     * @param period 周期
+     * @return 任务实例列表
+     */
+    public List<SysTaskInstance> selectByPeriod(String period);
 }

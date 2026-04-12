@@ -154,107 +154,102 @@
     </div>
 
     <!-- 添加/编辑项目对话框 -->
-    <el-dialog :title="title" :visible.sync="open" width="800px" append-to-body custom-class="pp-dialog">
-      <el-form ref="form" :model="form" :rules="rules" label-width="100px">
-        <el-row :gutter="20">
+    <el-dialog :title="title" :visible.sync="open" width="640px" append-to-body custom-class="pp-dialog">
+      <el-form ref="form" :model="form" :rules="rules" label-width="80px">
+        <el-row :gutter="12">
           <el-col :span="12">
             <el-form-item label="项目名称" prop="name">
-              <el-input v-model="form.name" placeholder="请输入项目名称" />
+              <el-input v-model="form.name" placeholder="请输入" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="客户" prop="customer">
-              <el-input v-model="form.customer" placeholder="请输入客户" />
+              <el-input v-model="form.customer" placeholder="请输入" />
             </el-form-item>
           </el-col>
         </el-row>
-        <el-row :gutter="20">
+        <el-row :gutter="12">
           <el-col :span="12">
             <el-form-item label="项目经理" prop="pmId">
-              <el-select v-model="form.pmId" placeholder="请选择项目经理" filterable @change="handlePmChange">
+              <el-select v-model="form.pmId" placeholder="请选择" filterable style="width:100%" @change="handlePmChange">
                 <el-option v-for="item in personOptions" :key="item.id" :label="item.name" :value="item.id" />
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="销售人员" prop="salesId">
-              <el-select v-model="form.salesId" placeholder="请选择销售人员" filterable @change="handleSalesChange">
+              <el-select v-model="form.salesId" placeholder="请选择" filterable style="width:100%" @change="handleSalesChange">
                 <el-option v-for="item in personOptions" :key="item.id" :label="item.name" :value="item.id" />
               </el-select>
             </el-form-item>
           </el-col>
         </el-row>
-        <el-row :gutter="20">
+        <el-row :gutter="12">
           <el-col :span="12">
             <el-form-item label="成本(万)" prop="cost">
-              <el-input-number v-model="form.cost" :precision="2" :min="0" />
+              <el-input-number v-model="form.cost" :precision="2" :min="0" style="width:100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="已用成本(万)" prop="costUsed">
-              <el-input-number v-model="form.costUsed" :precision="2" :min="0" />
+            <el-form-item label="已用(万)" prop="costUsed">
+              <el-input-number v-model="form.costUsed" :precision="2" :min="0" style="width:100%" />
             </el-form-item>
           </el-col>
         </el-row>
-        <el-row :gutter="20">
+        <el-row :gutter="12">
           <el-col :span="12">
-            <el-form-item label="总工时(人天)" prop="workHours">
-              <el-input-number v-model="form.workHours" :min="0" />
+            <el-form-item label="工时(天)" prop="workHours">
+              <el-input-number v-model="form.workHours" :min="0" style="width:100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="已用工时(人天)" prop="workHoursUsed">
-              <el-input-number v-model="form.workHoursUsed" :min="0" />
+            <el-form-item label="已用(天)" prop="workHoursUsed">
+              <el-input-number v-model="form.workHoursUsed" :min="0" style="width:100%" />
             </el-form-item>
           </el-col>
         </el-row>
-        <el-row :gutter="20">
-          <el-col :span="8">
-            <el-form-item label="进度(%)" prop="progress">
-              <el-input-number v-model="form.progress" :min="0" :max="100" />
+        <el-row :gutter="12">
+          <el-col :span="12">
+            <el-form-item label="合同(万)" prop="contractAmount">
+              <el-input-number v-model="form.contractAmount" :precision="2" :min="0" style="width:100%" />
             </el-form-item>
           </el-col>
-          <el-col :span="8">
-            <el-form-item label="当前阶段" prop="stage">
-              <el-input v-model="form.stage" placeholder="请输入当前阶段" />
+          <el-col :span="12">
+            <el-form-item label="进度%" prop="progress">
+              <el-input-number v-model="form.progress" :min="0" :max="100" style="width:100%" />
             </el-form-item>
           </el-col>
-          <el-col :span="8">
+        </el-row>
+        <el-row :gutter="12">
+          <el-col :span="12">
             <el-form-item label="状态" prop="status">
-              <el-select v-model="form.status" placeholder="请选择状态">
+              <el-select v-model="form.status" placeholder="请选择" style="width:100%">
                 <el-option label="进行中" value="进行中" />
                 <el-option label="已完成" value="已完成" />
                 <el-option label="暂停" value="暂停" />
               </el-select>
             </el-form-item>
           </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="8">
-            <el-form-item label="开始日期" prop="startDate">
-              <el-date-picker v-model="form.startDate" type="date" value-format="yyyy-MM-dd" placeholder="选择开始日期" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item label="计划结束" prop="endDate">
-              <el-date-picker v-model="form.endDate" type="date" value-format="yyyy-MM-dd" placeholder="选择计划结束日期" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item label="实际结束" prop="actualEndDate">
-              <el-date-picker v-model="form.actualEndDate" type="date" value-format="yyyy-MM-dd" placeholder="选择实际结束日期" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="合同金额(万)" prop="contractAmount">
-              <el-input-number v-model="form.contractAmount" :precision="2" :min="0" />
+            <el-form-item label="当前阶段" prop="stage">
+              <el-input v-model="form.stage" placeholder="请输入" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="12">
+          <el-col :span="12">
+            <el-form-item label="开始日期" prop="startDate">
+              <el-date-picker v-model="form.startDate" type="date" value-format="yyyy-MM-dd" placeholder="选择" style="width:100%" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="结束日期" prop="endDate">
+              <el-date-picker v-model="form.endDate" type="date" value-format="yyyy-MM-dd" placeholder="选择" style="width:100%" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-form-item label="备注" prop="remark">
-          <el-input v-model="form.remark" type="textarea" placeholder="请输入备注" />
+          <el-input v-model="form.remark" type="textarea" :rows="2" placeholder="请输入备注" />
         </el-form-item>
       </el-form>
       <div slot="footer" class="pp-dialog-footer">
@@ -432,6 +427,63 @@
         </div>
       </div>
     </el-dialog>
+
+    <!-- 开票对话框 -->
+    <el-dialog title="项目开票" :visible.sync="invoiceOpen" width="500px" append-to-body custom-class="pp-dialog">
+      <div class="pp-invoice-dialog-header">
+        <span>合同金额: ¥{{ invoiceProject.contractAmount || 0 }}万</span>
+        <span class="pp-invoice-total">已开票: ¥{{ invoiceList.reduce((sum, i) => sum + (i.amount || 0), 0) }}万</span>
+      </div>
+      <!-- 已有开票列表 -->
+      <div class="pp-invoice-list" v-if="invoiceList.length > 0">
+        <div class="pp-invoice-row" v-for="(inv, idx) in invoiceList" :key="idx">
+          <span class="pp-invoice-amount">¥{{ inv.amount }}万</span>
+          <span class="pp-invoice-percent">{{ inv.percent }}%</span>
+          <span class="pp-invoice-type-tag" :class="inv.invoiceType">{{ inv.invoiceType }}</span>
+          <span class="pp-invoice-date">{{ inv.invoiceDate }}</span>
+          <button class="pp-invoice-del" @click="deleteInvoice(inv.id)">删除</button>
+        </div>
+      </div>
+      <!-- 添加新开票 -->
+      <div class="pp-invoice-add-section">
+        <div class="pp-invoice-add-title">添加新开票</div>
+        <el-form :model="invoiceForm" label-width="70px" size="small">
+          <el-row :gutter="12">
+            <el-col :span="12">
+              <el-form-item label="金额(万)">
+                <el-input-number v-model="invoiceForm.amount" :precision="2" :min="0" style="width:100%" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="占比%">
+                <el-input-number v-model="invoiceForm.percent" :min="0" :max="100" style="width:100%" />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row :gutter="12">
+            <el-col :span="12">
+              <el-form-item label="类型">
+                <el-select v-model="invoiceForm.invoiceType" style="width:100%">
+                  <el-option label="预付款" value="预付款" />
+                  <el-option label="进度款" value="进度款" />
+                  <el-option label="验收款" value="验收款" />
+                  <el-option label="尾款" value="尾款" />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="日期">
+                <el-date-picker v-model="invoiceForm.invoiceDate" type="date" value-format="yyyy-MM-dd" style="width:100%" />
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </el-form>
+        <button class="pp-btn pp-btn-primary" @click="submitInvoice">添加开票</button>
+      </div>
+      <div slot="footer" class="pp-dialog-footer">
+        <button class="pp-btn pp-btn-secondary" @click="closeInvoiceDialog">关闭</button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -440,6 +492,7 @@ import { listProject, getProject, delProject, addProject, updateProject, getMile
 import { listPersonAll } from "@/api/system/person";
 import { listIssueByProject } from "@/api/system/issue";
 import { listRiskByProject } from "@/api/system/risk";
+import { listInvoice, addInvoice, delInvoice } from "@/api/system/invoice";
 
 export default {
   name: "Project",
@@ -471,7 +524,12 @@ export default {
       form: {},
       rules: {
         name: [{ required: true, message: "项目名称不能为空", trigger: "blur" }]
-      }
+      },
+      // 开票相关
+      invoiceOpen: false,
+      invoiceProject: {},
+      invoiceList: [],
+      invoiceForm: {}
     };
   },
   computed: {
@@ -686,7 +744,52 @@ export default {
       this.$modal.msgWarning("编辑功能开发中");
     },
     addInvoice(row) {
-      this.$modal.msgWarning("开票功能开发中");
+      this.invoiceProject = row;
+      this.invoiceForm = {
+        projectId: row.id,
+        amount: undefined,
+        percent: undefined,
+        invoiceType: '进度款',
+        invoiceDate: undefined,
+        remark: undefined
+      };
+      this.loadInvoices(row.id);
+      this.invoiceOpen = true;
+    },
+    loadInvoices(projectId) {
+      listInvoice(projectId).then(response => {
+        this.invoiceList = response.data || [];
+      });
+    },
+    submitInvoice() {
+      if (!this.invoiceForm.amount) {
+        this.$modal.msgWarning("请输入开票金额");
+        return;
+      }
+      addInvoice(this.invoiceForm).then(response => {
+        this.$modal.msgSuccess("添加成功");
+        this.invoiceForm = {
+          projectId: this.invoiceProject.id,
+          amount: undefined,
+          percent: undefined,
+          invoiceType: '进度款',
+          invoiceDate: undefined,
+          remark: undefined
+        };
+        this.loadInvoices(this.invoiceProject.id);
+      });
+    },
+    deleteInvoice(id) {
+      this.$modal.confirm('是否确认删除该开票记录？').then(() => {
+        return delInvoice(id);
+      }).then(() => {
+        this.loadInvoices(this.invoiceProject.id);
+        this.$modal.msgSuccess("删除成功");
+      }).catch(() => {});
+    },
+    closeInvoiceDialog() {
+      this.invoiceOpen = false;
+      this.getList(); // 刷新项目列表以更新已开票金额
     },
     goTo(path) {
       this.$router.push(path);
@@ -1482,5 +1585,92 @@ export default {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+}
+
+/* 开票对话框 */
+.pp-invoice-dialog-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #F9FAFB;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-size: 14px;
+
+  .pp-invoice-total {
+    color: #10B981;
+    font-weight: 600;
+  }
+}
+
+.pp-invoice-list {
+  margin-bottom: 16px;
+  border: 1px solid #E5E7EB;
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.pp-invoice-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-bottom: 1px dashed #E5E7EB;
+
+  &:last-child { border-bottom: none; }
+}
+
+.pp-invoice-amount {
+  font-weight: 600;
+  color: #374151;
+  min-width: 60px;
+}
+
+.pp-invoice-percent {
+  color: #6B7280;
+  min-width: 40px;
+}
+
+.pp-invoice-type-tag {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  min-width: 60px;
+  text-align: center;
+
+  &.预付款 { background: #eff6ff; color: #2563EB; }
+  &.进度款 { background: #f0fdf4; color: #10B981; }
+  &.验收款 { background: #fffbeb; color: #F59E0B; }
+  &.尾款 { background: #f5f3ff; color: #6366F1; }
+}
+
+.pp-invoice-date {
+  color: #9CA3AF;
+  font-size: 12px;
+  min-width: 80px;
+}
+
+.pp-invoice-del {
+  background: none;
+  border: none;
+  color: #EF4444;
+  cursor: pointer;
+  font-size: 12px;
+  margin-left: auto;
+
+  &:hover { opacity: 0.8; }
+}
+
+.pp-invoice-add-section {
+  padding: 16px;
+  background: #F9FAFB;
+  border-radius: 6px;
+}
+
+.pp-invoice-add-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 12px;
 }
 </style>

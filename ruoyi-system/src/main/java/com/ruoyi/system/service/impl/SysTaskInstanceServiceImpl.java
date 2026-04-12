@@ -135,14 +135,18 @@ public class SysTaskInstanceServiceImpl implements ISysTaskInstanceService
         Map<String, Object> params = new HashMap<>();
         params.put("personId", personId);
         params.put("period", period);
-        Map<String, Integer> result = instanceMapper.countCompletionRate(params);
-        if (result == null || result.get("total") == null || result.get("total") == 0)
+        Map<String, Object> result = instanceMapper.countCompletionRate(params);
+        if (result == null || result.get("total") == null)
         {
             return 0;
         }
-        int total = result.get("total");
-        int completed = result.get("completed_count") != null ? result.get("completed_count") : 0;
-        return (completed * 100) / total;
+        long total = ((Number) result.get("total")).longValue();
+        if (total == 0)
+        {
+            return 0;
+        }
+        long completed = result.get("completed_count") != null ? ((Number) result.get("completed_count")).longValue() : 0;
+        return (int) (completed * 100 / total);
     }
 
     /**
@@ -154,14 +158,18 @@ public class SysTaskInstanceServiceImpl implements ISysTaskInstanceService
     @Override
     public int getTeamCompletionRate(String period)
     {
-        Map<String, Integer> result = instanceMapper.countTeamCompletionRate(period);
-        if (result == null || result.get("total") == null || result.get("total") == 0)
+        Map<String, Object> result = instanceMapper.countTeamCompletionRate(period);
+        if (result == null || result.get("total") == null)
         {
             return 0;
         }
-        int total = result.get("total");
-        int completed = result.get("completed_count") != null ? result.get("completed_count") : 0;
-        return (completed * 100) / total;
+        long total = ((Number) result.get("total")).longValue();
+        if (total == 0)
+        {
+            return 0;
+        }
+        long completed = result.get("completed_count") != null ? ((Number) result.get("completed_count")).longValue() : 0;
+        return (int) (completed * 100 / total);
     }
 
     /**
@@ -176,5 +184,17 @@ public class SysTaskInstanceServiceImpl implements ISysTaskInstanceService
         // 此方法需要复杂查询，暂时返回空列表
         // 后续可以添加分组统计SQL
         return List.of();
+    }
+
+    /**
+     * 查询某周期的所有任务实例
+     *
+     * @param period 周期
+     * @return 任务实例列表
+     */
+    @Override
+    public List<SysTaskInstance> selectByPeriod(String period)
+    {
+        return instanceMapper.selectByPeriod(period);
     }
 }

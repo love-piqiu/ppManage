@@ -10,6 +10,15 @@ import java.util.Map;
 public interface ISysReportService
 {
     /**
+     * 获取周报完整数据（新版）
+     *
+     * @param startDate 开始日期(yyyy-MM-dd)
+     * @param endDate 结束日期(yyyy-MM-dd)
+     * @return 周报数据（包含overview、projectProgress、issueList等）
+     */
+    public Map<String, Object> getWeeklyReportData(String startDate, String endDate);
+
+    /**
      * 生成周报内容
      *
      * @param startDate 开始日期(yyyy-MM-dd)
@@ -26,4 +35,13 @@ public interface ISysReportService
      * @return HTML内容
      */
     public String generateWeeklyHtml(String startDate, String endDate);
+
+    /**
+     * 生成邮件预览HTML
+     *
+     * @param startDate 开始日期(yyyy-MM-dd)
+     * @param endDate 结束日期(yyyy-MM-dd)
+     * @return 邮件HTML内容
+     */
+    public String generateEmailPreviewHtml(String startDate, String endDate);
 }

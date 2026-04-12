@@ -5,6 +5,7 @@ import java.util.List;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.ruoyi.common.config.RuoYiConfig;
 import com.ruoyi.common.constant.CacheConstants;
 import com.ruoyi.common.constant.UserConstants;
 import com.ruoyi.common.core.redis.RedisCache;
@@ -79,12 +80,18 @@ public class SysConfigServiceImpl implements ISysConfigService
 
     /**
      * 获取验证码开关
-     * 
+     *
      * @return true开启，false关闭
      */
     @Override
     public boolean selectCaptchaEnabled()
     {
+        // 先检查application.yml中的captchaType配置
+        String captchaType = RuoYiConfig.getCaptchaType();
+        if ("none".equals(captchaType))
+        {
+            return false;
+        }
         String captchaEnabled = selectConfigByKey("sys.account.captchaEnabled");
         if (StringUtils.isEmpty(captchaEnabled))
         {

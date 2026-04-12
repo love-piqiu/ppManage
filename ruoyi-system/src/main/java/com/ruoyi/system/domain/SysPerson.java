@@ -1,6 +1,9 @@
 package com.ruoyi.system.domain;
 
 import java.util.Date;
+import java.time.LocalDate;
+import java.time.Period;
+import java.time.ZoneId;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.ruoyi.common.annotation.Excel;
 import com.ruoyi.common.annotation.Excel.ColumnType;
@@ -39,6 +42,11 @@ public class SysPerson extends BaseEntity
     /** 邮箱 */
     @Excel(name = "邮箱")
     private String email;
+
+    /** 出生日期 */
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    @Excel(name = "出生日期", width = 30, dateFormat = "yyyy-MM-dd")
+    private Date birthDate;
 
     /** 年龄 */
     @Excel(name = "年龄")
@@ -203,6 +211,27 @@ public class SysPerson extends BaseEntity
     public void setHometown(String hometown)
     {
         this.hometown = hometown;
+    }
+
+    public Date getBirthDate()
+    {
+        return birthDate;
+    }
+
+    public void setBirthDate(Date birthDate)
+    {
+        this.birthDate = birthDate;
+        // 自动计算年龄
+        if (birthDate != null)
+        {
+            LocalDate birthLocalDate = birthDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+            LocalDate now = LocalDate.now();
+            this.age = Period.between(birthLocalDate, now).getYears();
+        }
+        else
+        {
+            this.age = null;
+        }
     }
 
     public Date getEntryDate()

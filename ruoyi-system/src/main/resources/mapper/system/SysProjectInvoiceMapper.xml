@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysProjectInvoiceMapper">
+
+    <resultMap type="SysProjectInvoice" id="SysProjectInvoiceResult">
+        <id     property="id"           column="id"            />
+        <result property="projectId"    column="project_id"    />
+        <result property="amount"       column="amount"        />
+        <result property="percent"      column="percent"       />
+        <result property="invoiceType"  column="invoice_type"  />
+        <result property="invoiceDate"  column="invoice_date"  />
+        <result property="remark"       column="remark"        />
+        <result property="createBy"     column="create_by"     />
+        <result property="createTime"   column="create_time"   />
+        <result property="updateBy"     column="update_by"     />
+        <result property="updateTime"   column="update_time"   />
+    </resultMap>
+
+    <sql id="selectInvoiceVo">
+        select id, project_id, amount, percent, invoice_type, invoice_date, remark,
+               create_by, create_time, update_by, update_time
+        from sys_project_invoice
+    </sql>
+
+    <select id="selectInvoiceByProjectId" parameterType="Long" resultMap="SysProjectInvoiceResult">
+        <include refid="selectInvoiceVo"/>
+        where project_id = #{projectId}
+        order by invoice_date desc, id desc
+    </select>
+
+    <select id="selectInvoiceById" parameterType="Long" resultMap="SysProjectInvoiceResult">
+        <include refid="selectInvoiceVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="selectTotalAmountByProjectId" parameterType="Long" resultType="java.math.BigDecimal">
+        select COALESCE(sum(amount), 0) from sys_project_invoice where project_id = #{projectId}
+    </select>
+
+    <insert id="insertInvoice" parameterType="SysProjectInvoice" useGeneratedKeys="true" keyProperty="id">
+        insert into sys_project_invoice(
+            <if test="projectId != null">project_id,</if>
+            <if test="amount != null">amount,</if>
+            <if test="percent != null">percent,</if>
+            <if test="invoiceType != null and invoiceType != ''">invoice_type,</if>
+            <if test="invoiceDate != null">invoice_date,</if>
+            <if test="remark != null and remark != ''">remark,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            create_time
+        )values(
+            <if test="projectId != null">#{projectId},</if>
+            <if test="amount != null">#{amount},</if>
+            <if test="percent != null">#{percent},</if>
+            <if test="invoiceType != null and invoiceType != ''">#{invoiceType},</if>
+            <if test="invoiceDate != null">#{invoiceDate},</if>
+            <if test="remark != null and remark != ''">#{remark},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            sysdate()
+        )
+    </insert>
+
+    <update id="updateInvoice" parameterType="SysProjectInvoice">
+        update sys_project_invoice
+        <set>
+            <if test="amount != null">amount = #{amount},</if>
+            <if test="percent != null">percent = #{percent},</if>
+            <if test="invoiceType != null and invoiceType != ''">invoice_type = #{invoiceType},</if>
+            <if test="invoiceDate != null">invoice_date = #{invoiceDate},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+            update_time = sysdate()
+        </set>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteInvoiceById" parameterType="Long">
+        delete from sys_project_invoice where id = #{id}
+    </delete>
+
+    <delete id="deleteInvoiceByIds" parameterType="Long">
+        delete from sys_project_invoice where id in
+        <foreach collection="array" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+</mapper>

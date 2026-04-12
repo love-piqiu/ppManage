@@ -4,6 +4,85 @@
 @import './element-ui.scss';
 @import './sidebar.scss';
 @import './btn.scss';
+@import './ppmanage.scss';
+
+/* ppManage 全局CSS变量 - 确保在所有组件中可用 */
+:root {
+  --pp-primary: #2563EB;
+  --pp-primary-light: #3B82F6;
+  --pp-success: #10B981;
+  --pp-warning: #F59E0B;
+  --pp-danger: #EF4444;
+  --pp-gray-50: #F9FAFB;
+  --pp-gray-100: #F3F4F6;
+  --pp-gray-200: #E5E7EB;
+  --pp-gray-300: #D1D5DB;
+  --pp-gray-400: #9CA3AF;
+  --pp-gray-500: #6B7280;
+  --pp-gray-600: #4B5563;
+  --pp-gray-700: #374151;
+  --pp-gray-800: #1F2937;
+}
+
+/* ppManage 全局按钮样式 - 强制覆盖Element UI */
+.pp-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.pp-btn-primary {
+  background: #2563EB !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
+.pp-btn-primary:hover {
+  background: #3B82F6 !important;
+}
+
+.pp-btn-secondary {
+  background: #F3F4F6 !important;
+  color: #374151 !important;
+  border: 1px solid #E5E7EB !important;
+}
+
+.pp-btn-secondary:hover {
+  background: #E5E7EB !important;
+  border-color: #D1D5DB !important;
+}
+
+.pp-btn-success {
+  background: #10B981 !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
+.pp-btn-success:hover {
+  background: #34D399 !important;
+}
+
+.pp-btn-danger {
+  background: #EF4444 !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
+.pp-btn-danger:hover {
+  background: #F87171 !important;
+}
+
+.pp-btn-sm {
+  padding: 4px 10px !important;
+  font-size: 12px !important;
+}
 
 body {
   height: 100%;

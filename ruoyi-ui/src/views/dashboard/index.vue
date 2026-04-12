@@ -4,10 +4,10 @@
     <div class="db-header">
       <div class="db-title">首页看板</div>
       <div class="db-actions">
-        <el-button type="primary" size="small" @click="goTo('/system/project')">+ 新增项目</el-button>
-        <el-button type="primary" size="small" @click="goTo('/system/issue')">+ 新增问题</el-button>
-        <el-button size="small" @click="goTo('/report')">生成周报</el-button>
-        <el-button size="small" @click="handleExport">导出数据</el-button>
+        <button class="pp-btn pp-btn-primary" @click="goTo('/system/project')">+ 新增项目</button>
+        <button class="pp-btn pp-btn-primary" @click="goTo('/system/issue')">+ 新增问题</button>
+        <button class="pp-btn pp-btn-secondary" @click="goTo('/report')">生成周报</button>
+        <button class="pp-btn pp-btn-secondary" @click="handleExport">导出数据</button>
       </div>
     </div>
 

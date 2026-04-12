@@ -11,6 +11,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="level"          column="level"           />
         <result property="contact"        column="contact"         />
         <result property="email"          column="email"           />
+        <result property="birthDate"      column="birth_date"      />
         <result property="age"            column="age"             />
         <result property="workYears"      column="work_years"      />
         <result property="companyYears"   column="company_years"   />
@@ -28,7 +29,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectPersonVo">
-        select id, name, position, level, contact, email, age, work_years, company_years,
+        select id, name, position, level, contact, email, birth_date, age, work_years, company_years,
                education, school, hometown, entry_date, status, del_flag,
                create_by, create_time, update_by, update_time, remark
         from sys_person
@@ -54,7 +55,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                 AND education = #{education}
             </if>
         </where>
-        order by id desc
+        order by company_years desc, id desc
     </select>
 
     <select id="selectPersonAll" resultMap="SysPersonResult">
@@ -93,6 +94,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="level != null and level != ''">level,</if>
             <if test="contact != null and contact != ''">contact,</if>
             <if test="email != null and email != ''">email,</if>
+            <if test="birthDate != null">birth_date,</if>
             <if test="age != null">age,</if>
             <if test="workYears != null">work_years,</if>
             <if test="companyYears != null">company_years,</if>
@@ -110,6 +112,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="level != null and level != ''">#{level},</if>
             <if test="contact != null and contact != ''">#{contact},</if>
             <if test="email != null and email != ''">#{email},</if>
+            <if test="birthDate != null">#{birthDate},</if>
             <if test="age != null">#{age},</if>
             <if test="workYears != null">#{workYears},</if>
             <if test="companyYears != null">#{companyYears},</if>
@@ -132,6 +135,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="level != null">level = #{level},</if>
             <if test="contact != null">contact = #{contact},</if>
             <if test="email != null">email = #{email},</if>
+            <if test="birthDate != null">birth_date = #{birthDate},</if>
             <if test="age != null">age = #{age},</if>
             <if test="workYears != null">work_years = #{workYears},</if>
             <if test="companyYears != null">company_years = #{companyYears},</if>

@@ -196,10 +196,16 @@
         </el-row>
         <el-row :gutter="20">
           <el-col :span="12">
+            <el-form-item label="出生日期" prop="birthDate">
+              <el-date-picker v-model="form.birthDate" type="date" value-format="yyyy-MM-dd" placeholder="选择出生日期" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
             <el-form-item label="入职日期" prop="entryDate">
               <el-date-picker v-model="form.entryDate" type="date" value-format="yyyy-MM-dd" placeholder="选择入职日期" />
             </el-form-item>
           </el-col>
+        </el-row>
           <el-col :span="12">
             <el-form-item label="状态" prop="status">
               <el-radio-group v-model="form.status">
@@ -386,7 +392,7 @@ export default {
     resetQuery() { this.queryParams = { pageNum: 1, pageSize: 10, keyword: undefined, education: undefined, status: undefined }; this.getList(); },
     changePage(delta) { this.queryParams.pageNum += delta; this.getList(); },
     goToPage(page) { this.queryParams.pageNum = page; this.getList(); },
-    reset() { this.form = { id: undefined, name: undefined, position: undefined, level: undefined, contact: undefined, email: undefined, workYears: undefined, companyYears: undefined, education: undefined, school: undefined, hometown: undefined, entryDate: undefined, status: "在职", remark: undefined }; this.resetForm("form"); },
+    reset() { this.form = { id: undefined, name: undefined, position: undefined, level: undefined, contact: undefined, email: undefined, birthDate: undefined, workYears: undefined, companyYears: undefined, education: undefined, school: undefined, hometown: undefined, entryDate: undefined, status: "在职", remark: undefined }; this.resetForm("form"); },
     cancel() { this.open = false; this.reset(); },
     handleAdd() { this.reset(); this.open = true; this.title = "添加人员"; },
     handleUpdate(row) { this.reset(); getPerson(row.id).then(response => { this.form = response.data; this.open = true; this.title = "修改人员"; }); },

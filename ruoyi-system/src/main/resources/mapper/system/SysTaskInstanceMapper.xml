@@ -138,4 +138,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where period = #{period} and del_flag = '0'
     </select>
 
+    <select id="selectByPeriod" parameterType="String" resultMap="SysTaskInstanceResult">
+        <include refid="selectInstanceVo"/>
+        where period = #{period} and del_flag = '0'
+        order by task_id, person_id
+    </select>
+
 </mapper>
