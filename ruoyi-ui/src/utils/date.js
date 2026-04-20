@@ -9,12 +9,7 @@
 export function getCurrentWeek() {
   const now = new Date()
   const year = now.getFullYear()
-
-  // 计算当前是第几周（ISO周数）
-  const firstDay = new Date(year, 0, 1)
-  const days = Math.floor((now - firstDay) / (24 * 60 * 60 * 1000))
-  const weekNum = Math.ceil((days + firstDay.getDay() + 1) / 7)
-
+  const weekNum = getISOWeek(now)
   return `${year}-W${weekNum}`
 }
 
@@ -39,8 +34,86 @@ export function getCurrentDay() {
 }
 
 /**
+ * 获取当前季度标识
+ * @returns {string} 格式：2026-Q1
+ */
+export function getCurrentQuarter() {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = now.getMonth() + 1
+  const quarterNum = Math.ceil(month / 3)
+  return `${year}-Q${quarterNum}`
+}
+
+/**
+ * 获取季度范围
+ * @param {string} period 格式：2026-Q1
+ * @returns {object} { year, quarterNum, startDate, endDate }
+ */
+export function getQuarterRange(period) {
+  const [year, quarterStr] = period.split('-Q')
+  const quarterNum = parseInt(quarterStr)
+  const startMonth = (quarterNum - 1) * 3 + 1
+  const endMonth = startMonth + 2
+
+  const startDate = new Date(year, startMonth - 1, 1)
+  const endDate = new Date(year, endMonth - 1, new Date(year, endMonth, 0).getDate())
+
+  return {
+    year: parseInt(year),
+    quarterNum,
+    startMonth,
+    endMonth,
+    startDate,
+    endDate
+  }
+}
+
+/**
+ * 格式化季度显示文本
+ * @param {string} period 格式：2026-Q1
+ * @returns {string} 格式：2026年第1季度
+ */
+export function formatQuarterDisplay(period) {
+  const range = getQuarterRange(period)
+  return `${range.year}年第${range.quarterNum}季度`
+}
+
+/**
+ * 获取上一季度
+ * @param {string} period 格式：2026-Q1
+ * @returns {string}
+ */
+export function prevQuarter(period) {
+  const [year, quarterStr] = period.split('-Q')
+  const quarterNum = parseInt(quarterStr)
+  const yearNum = parseInt(year)
+
+  if (quarterNum === 1) {
+    return `${yearNum - 1}-Q4`
+  }
+  return `${year}-Q${quarterNum - 1}`
+}
+
+/**
+ * 获取下一季度
+ * @param {string} period 格式：2026-Q1
+ * @returns {string}
+ */
+export function nextQuarter(period) {
+  const [year, quarterStr] = period.split('-Q')
+  const quarterNum = parseInt(quarterStr)
+  const yearNum = parseInt(year)
+
+  if (quarterNum === 4) {
+    return `${yearNum + 1}-Q1`
+  }
+  return `${year}-Q${quarterNum + 1}`
+}
+
+/**
  * 根据周期类型获取当前周期标识
- * @param {string} cycle 每日/每周/每月
+ * @param {string} cycle 每日/每周/每月/每季
  * @returns {string}
  */
 export function getCurrentPeriod(cycle) {
@@ -48,12 +121,13 @@ export function getCurrentPeriod(cycle) {
     case '每日': return getCurrentDay()
     case '每周': return getCurrentWeek()
     case '每月': return getCurrentMonth()
+    case '每季': return getCurrentQuarter()
     default: return getCurrentWeek()
   }
 }
 
 /**
- * 获取周的范围日期
+ * 获取一周7天的日期列表
  * @param {string} period 格式：2026-W15
  * @returns {object} { year, month, weekNum, startDate, endDate }
  */
@@ -197,4 +271,27 @@ export function overdueDays(deadline) {
   const now = new Date()
   const diff = Math.floor((now - deadlineDate) / (24 * 60 * 60 * 1000))
   return diff > 0 ? diff : 0
+}
+
+/**
+ * 获取一周7天的日期列表
+ * @param {string} period 格式：2026-W15
+ * @returns {Array} [{ date, name, shortDate }]
+ */
+export function getWeekDays(period) {
+  const range = getWeekRange(period)
+  const dayNames = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+  const days = []
+
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(range.monday.getTime() + i * 24 * 60 * 60 * 1000)
+    const dateStr = formatDate(date, 'yyyy-MM-dd')
+    days.push({
+      date: dateStr,
+      name: dayNames[i],
+      shortDate: formatDate(date, 'MM-dd')
+    })
+  }
+
+  return days
 }

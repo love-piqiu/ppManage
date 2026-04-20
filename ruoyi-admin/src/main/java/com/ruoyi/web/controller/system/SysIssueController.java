@@ -112,4 +112,15 @@ public class SysIssueController extends BaseController
     {
         return toAjax(issueService.deleteIssueByIds(issueIds));
     }
+
+    /**
+     * 根据项目ID查询未解决问题列表
+     */
+    @PreAuthorize("@ss.hasPermi('system:issue:query')")
+    @GetMapping("/project/{projectId}")
+    public AjaxResult listByProject(@PathVariable Long projectId)
+    {
+        List<SysIssue> list = issueService.selectUnresolvedByProjectId(projectId);
+        return success(list);
+    }
 }

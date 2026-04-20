@@ -1,11 +1,13 @@
 <template>
   <div class="pp-matrix-container">
-    <div class="pp-matrix-tip">💡 表格可横向滚动查看所有人员</div>
+    <div class="pp-matrix-tip">💡 表格可横向滚动查看所有人员，点击单元格可更新状态</div>
     <table class="pp-matrix-table">
       <thead>
         <tr>
           <th class="pp-task-header">任务名称</th>
-          <th class="pp-person-header" v-for="person in persons" :key="person.id">{{ person.name }}</th>
+          <th class="pp-person-header" :class="{ 'pp-person-incomplete': getPersonRate(person) < 100 }" v-for="person in persons" :key="person.id">
+            {{ person.name }}
+          </th>
           <th class="pp-rate-header">完成率</th>
         </tr>
       </thead>
@@ -24,19 +26,7 @@
           >
             {{ getCellIcon(task, person) }}
           </td>
-          <td class="pp-rate-cell" :style="{ color: getTaskRateColor(task) }">{{ getTaskRate(task) }}%</td>
-        </tr>
-        <tr class="pp-stats-row">
-          <td class="pp-task-name-cell pp-stats-label">人员完成率</td>
-          <td
-            class="pp-matrix-cell pp-rate-cell"
-            :style="{ color: getPersonRateColor(person) }"
-            v-for="person in persons"
-            :key="person.id"
-          >
-            {{ getPersonRate(person) }}%
-          </td>
-          <td class="pp-rate-cell pp-total-rate">{{ totalRate }}%</td>
+          <td class="pp-rate-cell pp-rate-sticky" :style="{ color: getTaskRateColor(task) }">{{ getTaskRate(task) }}%</td>
         </tr>
       </tbody>
     </table>
@@ -69,11 +59,6 @@ export default {
         map[`${i.taskId}-${i.personId}`] = i
       })
       return map
-    },
-    totalRate() {
-      const total = this.instances.length
-      const completed = this.instances.filter(i => i.completed === 1).length
-      return total > 0 ? Math.round(completed * 100 / total) : 0
     }
   },
   methods: {
@@ -95,7 +80,7 @@ export default {
       return { done: '✓', pending: '○', overdue: '!', none: '-' }[status]
     },
     getCycleClass(task) {
-      const map = { '每日': 'daily', '每周': 'weekly', '每月': 'monthly' }
+      const map = { '每日': 'daily', '每工作日': 'workday', '每周': 'weekly', '每月': 'monthly' }
       return map[task.cycle] || 'daily'
     },
     getTaskRate(task) {
@@ -109,19 +94,20 @@ export default {
       return rate >= 80 ? '#10B981' : rate >= 50 ? '#F59E0B' : '#EF4444'
     },
     getPersonRate(person) {
+      // 计算该人员的完成率（基于所有任务的实例）
       const personInstances = this.instances.filter(i => i.personId === person.id)
       const total = personInstances.length
       const completed = personInstances.filter(i => i.completed === 1).length
       return total > 0 ? Math.round(completed * 100 / total) : 0
     },
-    getPersonRateColor(person) {
-      const rate = this.getPersonRate(person)
-      return rate >= 80 ? '#10B981' : rate >= 50 ? '#F59E0B' : '#EF4444'
-    },
     handleCellClick(task, person) {
       const instance = this.getInstance(task, person)
-      if (instance && instance.completed === 0) {
-        this.$emit('complete', instance)
+      if (instance) {
+        if (instance.completed === 1) {
+          this.$emit('uncomplete', instance)
+        } else {
+          this.$emit('complete', instance)
+        }
       }
     }
   }
@@ -132,7 +118,7 @@ export default {
 .pp-matrix-container {
   border: 1px solid #E5E7EB;
   border-radius: 8px;
-  overflow: hidden;
+  overflow-x: auto;
 }
 
 .pp-matrix-tip {
@@ -144,7 +130,8 @@ export default {
 }
 
 .pp-matrix-table {
-  width: 100%;
+  width: max-content;
+  min-width: 100%;
   border-collapse: collapse;
   font-size: 13px;
 
@@ -171,12 +158,21 @@ export default {
 }
 
 .pp-person-header {
-  min-width: 50px;
+  min-width: 60px;
   font-size: 11px;
+
+  &.pp-person-incomplete {
+    background: #FEF3C7 !important;
+    color: #B45309;
+  }
 }
 
 .pp-rate-header {
   min-width: 60px;
+  position: sticky;
+  right: 0;
+  z-index: 10;
+  background: #F9FAFB;
 }
 
 .pp-task-name-cell {
@@ -200,6 +196,7 @@ export default {
   margin-left: 6px;
 
   &.daily { background: #DBEAFE; color: #1D4ED8; }
+  &.workday { background: #E0E7FF; color: #4338CA; }
   &.weekly { background: #FEF3C7; color: #B45309; }
   &.monthly { background: #E0E7FF; color: #4338CA; }
 }
@@ -233,19 +230,10 @@ export default {
   font-weight: 600;
 }
 
-.pp-stats-row {
-  td {
-    background: #EFF6FF;
-  }
-}
-
-.pp-stats-label {
-  color: #374151;
-  font-weight: 600;
-}
-
-.pp-total-rate {
-  color: #2563EB;
-  font-weight: 700;
+.pp-rate-sticky {
+  position: sticky;
+  right: 0;
+  background: white;
+  z-index: 5;
 }
 </style>

@@ -26,14 +26,18 @@
         <div class="pp-form-group">
           <label class="pp-form-label">发送日期</label>
           <el-select v-model="form.sendDay" class="pp-form-input">
-            <el-option label="周五" value="5" />
-            <el-option label="周四" value="4" />
+            <el-option label="周一" value="1" />
+            <el-option label="周二" value="2" />
             <el-option label="周三" value="3" />
+            <el-option label="周四" value="4" />
+            <el-option label="周五" value="5" />
+            <el-option label="周六" value="6" />
+            <el-option label="周日" value="7" />
           </el-select>
         </div>
         <div class="pp-form-group">
           <label class="pp-form-label">发送时间</label>
-          <el-time-picker v-model="form.sendTime" format="HH:mm" value-format="HH:mm" class="pp-form-input" />
+          <el-input v-model="form.sendTime" placeholder="如: 17:00" class="pp-form-input pp-time-input" />
         </div>
       </div>
 
@@ -55,7 +59,7 @@
         </div>
         <div class="pp-form-group">
           <label class="pp-form-label">端口</label>
-          <el-input-number v-model="form.smtpPort" :min="1" :max="65535" class="pp-form-input" />
+          <el-input v-model.number="form.smtpPort" type="number" placeholder="如: 465" class="pp-form-input pp-port-input" />
         </div>
       </div>
 
@@ -66,8 +70,8 @@
         </div>
         <div class="pp-form-group">
           <label class="pp-form-label">授权码/密码</label>
-          <el-input v-model="form.smtpPassword" type="password" placeholder="邮箱授权码或密码" class="pp-form-input" />
-          <div class="pp-form-hint">QQ邮箱需使用授权码，非登录密码</div>
+          <el-input v-model="form.smtpPassword" type="password" :placeholder="form.hasPassword ? '密码已保存，如需修改请输入新密码' : '邮箱授权码或密码'" class="pp-form-input" />
+          <div class="pp-form-hint">邮箱需使用授权码，非登录密码</div>
         </div>
       </div>
 
@@ -115,6 +119,7 @@ export default {
         smtpPort: 465,
         smtpUser: '',
         smtpPassword: '',
+        hasPassword: false,
         senderName: '项目管理系统',
         subjectTemplate: '项目周报 - {日期}'
       },
@@ -123,8 +128,59 @@ export default {
   },
   computed: {
     nextSendTime() {
-      const dayMap = { '3': '周三', '4': '周四', '5': '周五' };
-      return `${dayMap[this.form.sendDay]} ${this.form.sendTime}`;
+      // 计算下次发送的具体日期和时间
+      const now = new Date();
+      const currentDayOfWeek = now.getDay(); // 0=周日, 1=周一, ..., 5=周五, 6=周六
+
+      // 将周日=0 转换为 周一=1, 周日=7 的格式，便于计算
+      const adjustedCurrentDay = currentDayOfWeek === 0 ? 7 : currentDayOfWeek; // 1=周一, ..., 5=周五, 7=周日
+
+      // 处理 sendDay 可能是数字或字符串的情况
+      let targetDayNum = 5; // 默认周五
+      const dayValue = this.form.sendDay;
+      if (dayValue) {
+        const dayNameMap = { '周一': 1, '周二': 2, '周三': 3, '周四': 4, '周五': 5, '周六': 6, '周日': 7, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7 };
+        targetDayNum = dayNameMap[dayValue] || parseInt(dayValue) || 5;
+      }
+
+      // 解析发送时间
+      const timeStr = this.form.sendTime || '17:00';
+      const [targetHour, targetMinute] = timeStr.split(':').map(n => parseInt(n) || 0);
+
+      // 当前时间（小时和分钟）
+      const currentHour = now.getHours();
+      const currentMinute = now.getMinutes();
+      const currentTotalMinutes = currentHour * 60 + currentMinute;
+      const targetTotalMinutes = targetHour * 60 + targetMinute;
+
+      // 计算距离下次发送的天数
+      let daysUntilSend = 0;
+
+      if (adjustedCurrentDay === targetDayNum) {
+        // 今天是发送日
+        if (currentTotalMinutes < targetTotalMinutes) {
+          // 当前时间还没过发送时间，今天发送
+          daysUntilSend = 0;
+        } else {
+          // 已经过了发送时间，下周发送日发送
+          daysUntilSend = 7;
+        }
+      } else if (adjustedCurrentDay < targetDayNum) {
+        // 当前日在发送日之前（如周一在周五之前）
+        daysUntilSend = targetDayNum - adjustedCurrentDay;
+      } else {
+        // 当前日在发送日之后（如周六在周五之后）
+        daysUntilSend = 7 - adjustedCurrentDay + targetDayNum;
+      }
+
+      // 计算下次发送日期
+      const nextSendDate = new Date(now);
+      nextSendDate.setDate(now.getDate() + daysUntilSend);
+
+      const month = nextSendDate.getMonth() + 1;
+      const day = nextSendDate.getDate();
+
+      return `${month}月${day}日 ${timeStr}`;
     }
   },
   created() {
@@ -135,13 +191,48 @@ export default {
     loadConfig() {
       getEmailConfig().then(res => {
         if (res.data) {
-          this.form = { ...this.form, ...res.data };
+          const data = res.data;
+          // 处理时间格式：数据库返回可能带秒，去掉秒部分
+          let sendTime = data.sendTime || '17:00';
+          if (sendTime && sendTime.length > 5) {
+            sendTime = sendTime.substring(0, 5);
+          }
+          // 处理 sendDay：后端可能返回 '周五' 或 '5'
+          let sendDay = '5'; // 默认周五
+          if (data.sendDay) {
+            const dayNameToNum = { '周一': '1', '周二': '2', '周三': '3', '周四': '4', '周五': '5', '周六': '6', '周日': '7' };
+            sendDay = dayNameToNum[data.sendDay] || data.sendDay;
+          }
+          // 处理密码：如果返回 "******" 表示密码已配置
+          let smtpPassword = '';
+          let hasPassword = false;
+          if (data.password === '******') {
+            hasPassword = true;
+            smtpPassword = ''; // 清空，让 placeholder 显示提示
+          }
+          // 映射后端字段到前端字段
+          this.form = {
+            autoSend: data.enabled === 1,
+            sendDay: sendDay,
+            sendTime: sendTime,
+            recipients: data.recipientEmail || '',
+            smtpHost: data.host || 'smtp.qq.com',
+            smtpPort: data.port || 465,
+            smtpUser: data.username || '',
+            smtpPassword: smtpPassword,
+            hasPassword: hasPassword, // 标记是否已有密码
+            senderName: data.senderName || '项目管理系统',
+            subjectTemplate: data.emailSubject || '项目周报 - {日期}'
+          };
         }
       });
     },
     loadPreview() {
       getEmailPreview().then(res => {
-        this.previewHtml = res.data || '';
+        // 若依框架返回字符串时可能在 res.msg 或 res.data
+        this.previewHtml = res.msg || res.data || '';
+      }).catch(() => {
+        this.previewHtml = '';
       });
     },
     handleTestEmail() {
@@ -152,8 +243,31 @@ export default {
       }).catch(() => {});
     },
     handleSave() {
-      saveEmailConfig(this.form).then(() => {
+      // 处理 sendDay：前端用数字 '1'-'7'，后端需要字符串
+      const numToDayName = { '1': '周一', '2': '周二', '3': '周三', '4': '周四', '5': '周五', '6': '周六', '7': '周日' };
+      const sendDayValue = numToDayName[this.form.sendDay] || '周五';
+      // 处理密码：如果是占位符 "******"，表示用户没修改，不发送密码字段
+      let passwordValue = null;
+      if (this.form.smtpPassword && this.form.smtpPassword !== '******') {
+        passwordValue = this.form.smtpPassword;
+      }
+      // 映射前端字段到后端字段
+      const config = {
+        host: this.form.smtpHost,
+        port: this.form.smtpPort,
+        username: this.form.smtpUser,
+        password: passwordValue,
+        recipientEmail: this.form.recipients,
+        senderName: this.form.senderName,
+        emailSubject: this.form.subjectTemplate,
+        sendDay: sendDayValue,
+        sendTime: this.form.sendTime,
+        enabled: this.form.autoSend ? 1 : 0
+      };
+      saveEmailConfig(config).then(() => {
         this.$modal.msgSuccess("配置保存成功");
+        // 保存后重新加载配置
+        this.loadConfig();
       });
     }
   }
@@ -183,6 +297,8 @@ export default {
 .pp-form-group { display: flex; flex-direction: column; }
 .pp-form-label { font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 6px; }
 .pp-form-input { width: 100%; }
+.pp-port-input ::v-deep input { text-align: left; padding-left: 15px; -moz-appearance: textfield; &::-webkit-outer-spin-button, &::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; } }
+.pp-time-input { text-align: left; }
 .pp-form-hint { font-size: 11px; color: #9CA3AF; margin-top: 4px; }
 
 .pp-config-actions { display: flex; gap: 12px; margin-top: 24px; }

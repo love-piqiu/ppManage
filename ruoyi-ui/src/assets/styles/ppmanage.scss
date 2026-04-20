@@ -485,9 +485,34 @@
   color: var(--primary);
 }
 
+.pp-action-btn.primary {
+  border-color: #10B981;
+  color: #10B981;
+}
+
+.pp-action-btn.primary:hover {
+  background: #10B981;
+  color: white;
+}
+
+.pp-action-btn.warning {
+  border-color: #F97316;
+  color: #F97316;
+}
+
+.pp-action-btn.warning:hover {
+  background: #F97316;
+  color: white;
+}
+
+.pp-action-btn.danger {
+  border-color: #EF4444;
+  color: #EF4444;
+}
+
 .pp-action-btn.danger:hover {
-  border-color: var(--danger);
-  color: var(--danger);
+  background: #EF4444;
+  color: white;
 }
 
 /* 分页栏 */
@@ -1288,6 +1313,13 @@
   font-weight: 500;
   color: var(--gray-700);
   margin-bottom: 6px;
+}
+
+.pp-form-tip {
+  font-size: 12px;
+  color: #9CA3AF;
+  margin-top: 4px;
+  line-height: 1.4;
 }
 
 .pp-form-input {

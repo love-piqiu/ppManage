@@ -262,13 +262,13 @@
     </div>
 
     <!-- 邮件配置 -->
-    <email-config v-if="activeTab === 'config'" ref="emailConfig" @test="testEmail" @save="saveEmailConfig" />
+    <email-config v-if="activeTab === 'config'" ref="emailConfig" />
     </div>
   </div>
 </template>
 
 <script>
-import { getReportData, sendReportEmail, testReportEmail, getEmailConfig, saveEmailConfig } from '@/api/system/report'
+import { getReportData, sendReportEmail } from '@/api/system/report'
 import { getCurrentWeek } from '@/utils/date'
 import EmailConfig from './components/EmailConfig.vue'
 
@@ -382,20 +382,6 @@ export default {
         await this.$modal.confirm('确认发送周报邮件？')
         await sendReportEmail(this.period)
         this.$modal.msgSuccess('邮件发送成功！')
-      } catch (e) {}
-    },
-
-    async testEmail() {
-      try {
-        await testReportEmail()
-        this.$modal.msgSuccess('测试邮件已发送，请检查收件箱')
-      } catch (e) {}
-    },
-
-    async saveEmailConfig(config) {
-      try {
-        await saveEmailConfig(config)
-        this.$modal.msgSuccess('配置保存成功')
       } catch (e) {}
     },
 

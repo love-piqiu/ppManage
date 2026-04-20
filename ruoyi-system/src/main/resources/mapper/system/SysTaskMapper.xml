@@ -12,6 +12,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="deadlineTime"      column="deadline_time"      />
         <result property="deadlineDay"       column="deadline_day"       />
         <result property="deadlineWeekday"   column="deadline_weekday"   />
+        <result property="deadlineDate"      column="deadline_date"     />
+        <result property="deadlineQuarterMonth" column="deadline_quarter_month" />
+        <result property="deadlineQuarterDay"  column="deadline_quarter_day"  />
         <result property="status"            column="status"             />
         <result property="description"       column="description"        />
         <result property="remark"            column="remark"             />
@@ -23,7 +26,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectTaskVo">
-        select id, name, type, cycle, deadline_time, deadline_day, deadline_weekday,
+        select id, name, type, cycle, deadline_time, deadline_day, deadline_weekday, deadline_date,
+               deadline_quarter_month, deadline_quarter_day,
                status, description, remark, del_flag, create_by, create_time, update_by, update_time
         from sys_task
     </sql>
@@ -65,6 +69,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="deadlineTime != null and deadlineTime != ''">deadline_time,</if>
             <if test="deadlineDay != null">deadline_day,</if>
             <if test="deadlineWeekday != null and deadlineWeekday != ''">deadline_weekday,</if>
+            <if test="deadlineDate != null">deadline_date,</if>
+            <if test="deadlineQuarterMonth != null and deadlineQuarterMonth != ''">deadline_quarter_month,</if>
+            <if test="deadlineQuarterDay != null">deadline_quarter_day,</if>
             <if test="status != null and status != ''">status,</if>
             <if test="description != null and description != ''">description,</if>
             <if test="remark != null and remark != ''">remark,</if>
@@ -77,6 +84,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="deadlineTime != null and deadlineTime != ''">#{deadlineTime},</if>
             <if test="deadlineDay != null">#{deadlineDay},</if>
             <if test="deadlineWeekday != null and deadlineWeekday != ''">#{deadlineWeekday},</if>
+            <if test="deadlineDate != null">#{deadlineDate},</if>
+            <if test="deadlineQuarterMonth != null and deadlineQuarterMonth != ''">#{deadlineQuarterMonth},</if>
+            <if test="deadlineQuarterDay != null">#{deadlineQuarterDay},</if>
             <if test="status != null and status != ''">#{status},</if>
             <if test="description != null and description != ''">#{description},</if>
             <if test="remark != null and remark != ''">#{remark},</if>
@@ -94,6 +104,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="deadlineTime != null and deadlineTime != ''">deadline_time = #{deadlineTime},</if>
             <if test="deadlineDay != null">deadline_day = #{deadlineDay},</if>
             <if test="deadlineWeekday != null and deadlineWeekday != ''">deadline_weekday = #{deadlineWeekday},</if>
+            <if test="deadlineDate != null">deadline_date = #{deadlineDate},</if>
+            <if test="deadlineQuarterMonth != null and deadlineQuarterMonth != ''">deadline_quarter_month = #{deadlineQuarterMonth},</if>
+            <if test="deadlineQuarterDay != null">deadline_quarter_day = #{deadlineQuarterDay},</if>
             <if test="status != null and status != ''">status = #{status},</if>
             <if test="description != null and description != ''">description = #{description},</if>
             <if test="remark != null">remark = #{remark},</if>

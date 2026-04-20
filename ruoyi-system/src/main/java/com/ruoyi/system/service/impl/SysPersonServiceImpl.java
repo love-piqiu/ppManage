@@ -1,13 +1,17 @@
 package com.ruoyi.system.service.impl;
 
 import java.util.List;
+import java.util.ArrayList;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.ruoyi.common.constant.UserConstants;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.system.domain.SysPerson;
+import com.ruoyi.system.domain.SysPersonProject;
 import com.ruoyi.system.mapper.SysPersonMapper;
 import com.ruoyi.system.mapper.SysPersonProjectMapper;
+import com.ruoyi.system.mapper.SysProjectMapper;
 import com.ruoyi.system.service.ISysPersonService;
 
 /**
@@ -24,6 +28,9 @@ public class SysPersonServiceImpl implements ISysPersonService
     @Autowired
     private SysPersonProjectMapper personProjectMapper;
 
+    @Autowired
+    private SysProjectMapper projectMapper;
+
     /**
      * 查询人员列表
      *
@@ -33,7 +40,26 @@ public class SysPersonServiceImpl implements ISysPersonService
     @Override
     public List<SysPerson> selectPersonList(SysPerson person)
     {
-        return personMapper.selectPersonList(person);
+        List<SysPerson> list = personMapper.selectPersonList(person);
+        // 为每个人员查询在建项目
+        for (SysPerson p : list)
+        {
+            List<SysPersonProject> personProjects = personProjectMapper.selectByPersonId(p.getId());
+            List<String> projects = new ArrayList<>();
+            for (SysPersonProject pp : personProjects)
+            {
+                // 查询项目状态
+                var project = projectMapper.selectProjectById(pp.getProjectId());
+                if (project != null && "进行中".equals(project.getStatus()))
+                {
+                    // 显示格式：客户-项目名
+                    String displayName = (project.getCustomer() != null ? project.getCustomer() + "-" : "") + project.getName();
+                    projects.add(displayName);
+                }
+            }
+            p.setProjects(projects);
+        }
+        return list;
     }
 
     /**
@@ -45,6 +71,17 @@ public class SysPersonServiceImpl implements ISysPersonService
     public List<SysPerson> selectPersonAll()
     {
         return personMapper.selectPersonAll();
+    }
+
+    /**
+     * 查询所有在职人员（用于项目关联，不限制直属下级）
+     *
+     * @return 人员列表
+     */
+    @Override
+    public List<SysPerson> selectPersonAllForProject()
+    {
+        return personMapper.selectPersonAllForProject();
     }
 
     /**

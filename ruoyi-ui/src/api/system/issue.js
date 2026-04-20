@@ -51,3 +51,11 @@ export function delIssue(issueId) {
     method: 'delete'
   })
 }
+
+// 根据项目ID查询未解决问题列表
+export function listIssueByProject(projectId) {
+  return request({
+    url: '/system/issue/project/' + projectId,
+    method: 'get'
+  })
+}

@@ -46,7 +46,7 @@ export function sendReportEmail(period) {
 // 测试邮件发送
 export function testReportEmail() {
   return request({
-    url: '/system/email/test',
+    url: '/report/email/test',
     method: 'post'
   })
 }
@@ -54,7 +54,7 @@ export function testReportEmail() {
 // 获取邮件配置
 export function getEmailConfig() {
   return request({
-    url: '/system/email/config',
+    url: '/report/email/config',
     method: 'get'
   })
 }
@@ -62,8 +62,8 @@ export function getEmailConfig() {
 // 保存邮件配置
 export function saveEmailConfig(data) {
   return request({
-    url: '/system/email/config',
-    method: 'put',
+    url: '/report/email/config',
+    method: 'post',
     data: data
   })
 }

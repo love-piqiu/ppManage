@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysSkillCategoryMapper">
+
+    <resultMap type="SysSkillCategory" id="SysSkillCategoryResult">
+        <id     property="id"           column="id"            />
+        <result property="category"     column="category"      />
+        <result property="skills"       column="skills"        />
+        <result property="sortOrder"    column="sort_order"    />
+        <result property="status"       column="status"        />
+        <result property="delFlag"      column="del_flag"      />
+        <result property="createBy"     column="create_by"     />
+        <result property="createTime"   column="create_time"   />
+        <result property="updateBy"     column="update_by"     />
+        <result property="updateTime"   column="update_time"   />
+    </resultMap>
+
+    <sql id="selectSkillCategoryVo">
+        select id, category, skills, sort_order, status, del_flag, create_by, create_time, update_by, update_time
+        from sys_skill_category
+    </sql>
+
+    <select id="selectSkillCategoryList" parameterType="SysSkillCategory" resultMap="SysSkillCategoryResult">
+        <include refid="selectSkillCategoryVo"/>
+        <where>
+            del_flag = '0'
+            <if test="category != null and category != ''">
+                AND category like concat('%', #{category}, '%')
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+        </where>
+        order by sort_order
+    </select>
+
+    <select id="selectSkillCategoryAll" resultMap="SysSkillCategoryResult">
+        <include refid="selectSkillCategoryVo"/>
+        where del_flag = '0' and status = '0'
+        order by sort_order
+    </select>
+
+    <select id="selectSkillCategoryById" parameterType="Long" resultMap="SysSkillCategoryResult">
+        <include refid="selectSkillCategoryVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="selectSkillCategoryByName" parameterType="String" resultMap="SysSkillCategoryResult">
+        <include refid="selectSkillCategoryVo"/>
+        where category = #{category} and del_flag = '0'
+    </select>
+
+    <insert id="insertSkillCategory" parameterType="SysSkillCategory" useGeneratedKeys="true" keyProperty="id">
+        insert into sys_skill_category(
+            <if test="category != null and category != ''">category,</if>
+            <if test="skills != null and skills != ''">skills,</if>
+            <if test="sortOrder != null">sort_order,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            create_time
+        )values(
+            <if test="category != null and category != ''">#{category},</if>
+            <if test="skills != null and skills != ''">#{skills},</if>
+            <if test="sortOrder != null">#{sortOrder},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            sysdate()
+        )
+    </insert>
+
+    <update id="updateSkillCategory" parameterType="SysSkillCategory">
+        update sys_skill_category
+        <set>
+            <if test="category != null and category != ''">category = #{category},</if>
+            <if test="skills != null and skills != ''">skills = #{skills},</if>
+            <if test="sortOrder != null">sort_order = #{sortOrder},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+            update_time = sysdate()
+        </set>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteSkillCategoryById" parameterType="Long">
+        update sys_skill_category set del_flag = '2' where id = #{id}
+    </delete>
+
+    <delete id="deleteSkillCategoryByIds" parameterType="Long">
+        update sys_skill_category set del_flag = '2' where id in
+        <foreach collection="array" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+</mapper>

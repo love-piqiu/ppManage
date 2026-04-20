@@ -20,11 +20,18 @@ export default {
       vnodes.push(<svg-icon icon-class={icon}/>)
     }
 
+    // 折叠时显示的首字
+    if (title) {
+      const firstChar = title.charAt(0)
+      vnodes.push(<span class='menu-first-char'>{firstChar}</span>)
+    }
+
+    // 展开时显示的完整标题
     if (title) {
       if (title.length > 5) {
-        vnodes.push(<span slot='title' title={(title)}>{(title)}</span>)
+        vnodes.push(<span class='menu-title-full' title={(title)}>{(title)}</span>)
       } else {
-        vnodes.push(<span slot='title'>{(title)}</span>)
+        vnodes.push(<span class='menu-title-full'>{(title)}</span>)
       }
     }
     return vnodes

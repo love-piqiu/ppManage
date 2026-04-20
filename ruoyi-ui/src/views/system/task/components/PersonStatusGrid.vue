@@ -91,8 +91,24 @@ export default {
       }[item.status]
     },
     handleClick(item) {
-      if (item.status !== 'done' && item.instance) {
+      // 如果已完成，发出取消完成事件
+      if (item.status === 'done') {
+        if (item.instance) {
+          this.$emit('uncomplete', item.instance)
+        }
+        return
+      }
+
+      // 如果 instance 存在，发送 complete 事件
+      if (item.instance) {
         this.$emit('complete', item.instance)
+      } else {
+        // instance 不存在，发送 create-and-complete 事件
+        // 需要父组件来创建 instance 然后完成
+        this.$emit('createAndComplete', {
+          personId: item.personId,
+          personName: item.personName
+        })
       }
     },
     avatarStyle(name) {

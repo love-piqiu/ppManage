@@ -8,9 +8,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <id     property="id"              column="id"               />
         <result property="projectId"       column="project_id"       />
         <result property="projectName"     column="project_name"     />
+        <result property="customer"        column="customer"         />
         <result property="description"     column="description"      />
         <result property="level"           column="level"            />
         <result property="status"          column="status"           />
+        <result property="category"        column="category"         />
         <result property="measure"         column="measure"          />
         <result property="ownerId"         column="owner_id"         />
         <result property="ownerName"       column="owner_name"       />
@@ -25,43 +27,47 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectRiskVo">
-        select id, project_id, project_name, description, level, status, measure,
-               owner_id, owner_name, happen_date, resolve_date,
-               remark, del_flag, create_by, create_time, update_by, update_time
-        from sys_risk
+        select r.id, r.project_id, r.project_name, p.customer as customer, r.description, r.level, r.status, r.category, r.measure,
+               r.owner_id, r.owner_name, r.happen_date, r.resolve_date,
+               r.remark, r.del_flag, r.create_by, r.create_time, r.update_by, r.update_time
+        from sys_risk r
+        left join sys_project p on r.project_id = p.id
     </sql>
 
     <select id="selectRiskList" parameterType="SysRisk" resultMap="SysRiskResult">
         <include refid="selectRiskVo"/>
-        where del_flag = '0'
+        where r.del_flag = '0'
         <if test="projectId != null">
-            AND project_id = #{projectId}
+            AND r.project_id = #{projectId}
         </if>
         <if test="projectName != null and projectName != ''">
-            AND project_name like concat('%', #{projectName}, '%')
+            AND r.project_name like concat('%', #{projectName}, '%')
         </if>
         <if test="level != null and level != ''">
-            AND level = #{level}
+            AND r.level = #{level}
         </if>
         <if test="status != null and status != ''">
-            AND status = #{status}
+            AND r.status = #{status}
+        </if>
+        <if test="category != null and category != ''">
+            AND r.category = #{category}
         </if>
         <if test="ownerId != null">
-            AND owner_id = #{ownerId}
+            AND r.owner_id = #{ownerId}
         </if>
-        order by level desc, create_time desc
+        order by r.level desc, r.create_time desc
     </select>
 
     <select id="selectRiskById" parameterType="Long" resultMap="SysRiskResult">
         <include refid="selectRiskVo"/>
-        where id = #{id} and del_flag = '0'
+        where r.id = #{id} and r.del_flag = '0'
     </select>
 
     <select id="selectActiveByProjectId" parameterType="Long" resultMap="SysRiskResult">
         <include refid="selectRiskVo"/>
-        where project_id = #{projectId} and del_flag = '0'
-              and status in ('潜在', '已发生')
-        order by level desc, create_time desc
+        where r.project_id = #{projectId} and r.del_flag = '0'
+              and r.status in ('潜在', '已发生')
+        order by r.level desc, r.create_time desc
     </select>
 
     <insert id="insertRisk" parameterType="SysRisk" useGeneratedKeys="true" keyProperty="id">
@@ -71,6 +77,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="description != null and description != ''">description,</if>
             <if test="level != null and level != ''">level,</if>
             <if test="status != null and status != ''">status,</if>
+            <if test="category != null and category != ''">category,</if>
             <if test="measure != null and measure != ''">measure,</if>
             <if test="ownerId != null">owner_id,</if>
             <if test="ownerName != null and ownerName != ''">owner_name,</if>
@@ -85,6 +92,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="description != null and description != ''">#{description},</if>
             <if test="level != null and level != ''">#{level},</if>
             <if test="status != null and status != ''">#{status},</if>
+            <if test="category != null and category != ''">#{category},</if>
             <if test="measure != null and measure != ''">#{measure},</if>
             <if test="ownerId != null">#{ownerId},</if>
             <if test="ownerName != null and ownerName != ''">#{ownerName},</if>
@@ -103,6 +111,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="description != null and description != ''">description = #{description},</if>
             <if test="level != null and level != ''">level = #{level},</if>
             <if test="status != null and status != ''">status = #{status},</if>
+            <if test="category != null and category != ''">category = #{category},</if>
             <if test="measure != null and measure != ''">measure = #{measure},</if>
             <if test="ownerId != null">owner_id = #{ownerId},</if>
             <if test="ownerName != null and ownerName != ''">owner_name = #{ownerName},</if>

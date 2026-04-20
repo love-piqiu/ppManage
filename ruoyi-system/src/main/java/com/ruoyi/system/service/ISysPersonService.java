@@ -26,6 +26,13 @@ public interface ISysPersonService
     public List<SysPerson> selectPersonAll();
 
     /**
+     * 查询所有在职人员（用于项目关联，不限制直属下级）
+     *
+     * @return 人员列表
+     */
+    public List<SysPerson> selectPersonAllForProject();
+
+    /**
      * 通过人员ID查询人员信息
      *
      * @param id 人员ID

@@ -112,4 +112,15 @@ public class SysRiskController extends BaseController
     {
         return toAjax(riskService.deleteRiskByIds(riskIds));
     }
+
+    /**
+     * 根据项目ID查询未消除风险列表
+     */
+    @PreAuthorize("@ss.hasPermi('system:risk:query')")
+    @GetMapping("/project/{projectId}")
+    public AjaxResult listByProject(@PathVariable Long projectId)
+    {
+        List<SysRisk> list = riskService.selectActiveByProjectId(projectId);
+        return success(list);
+    }
 }

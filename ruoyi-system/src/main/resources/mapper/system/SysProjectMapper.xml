@@ -19,8 +19,18 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="progress"        column="progress"         />
         <result property="stage"           column="stage"            />
         <result property="status"          column="status"           />
+        <result property="isSubordinate"  column="is_subordinate"   />
+        <result property="projectType"     column="project_type"     />
         <result property="startDate"       column="start_date"       />
         <result property="endDate"         column="end_date"         />
+        <result property="reqPlanDate"     column="req_plan_date"    />
+        <result property="reqActualDate"   column="req_actual_date"  />
+        <result property="uatPlanDate"     column="uat_plan_date"    />
+        <result property="uatActualDate"   column="uat_actual_date"  />
+        <result property="launchPlanDate"  column="launch_plan_date" />
+        <result property="launchActualDate" column="launch_actual_date" />
+        <result property="acceptPlanDate"  column="accept_plan_date" />
+        <result property="acceptActualDate" column="accept_actual_date" />
         <result property="actualEndDate"   column="actual_end_date"  />
         <result property="remark"          column="remark"           />
         <result property="delFlag"         column="del_flag"         />
@@ -28,59 +38,76 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="createTime"      column="create_time"      />
         <result property="updateBy"        column="update_by"        />
         <result property="updateTime"      column="update_time"      />
+        <result property="contractAmount"  column="contract_amount"  />
+        <result property="invoicedAmount"  column="invoiced_amount"  />
+        <result property="issueCount"      column="issue_count"      />
+        <result property="riskCount"       column="risk_count"       />
+        <result property="personCount"     column="person_count"     />
     </resultMap>
 
     <sql id="selectProjectVo">
-        select id, name, customer, pm_id, pm_name, sales_id, sales_name,
-               cost, cost_used, work_hours, work_hours_used, progress, stage, status,
-               start_date, end_date, actual_end_date, remark, del_flag,
-               create_by, create_time, update_by, update_time
-        from sys_project
+        select p.id, p.name, p.customer, p.pm_id, p.pm_name, p.sales_id, p.sales_name,
+               p.cost, p.cost_used, p.work_hours, p.work_hours_used, p.progress, p.stage, p.status,
+               p.is_subordinate, p.project_type,
+               p.start_date, p.end_date,
+               p.req_plan_date, p.req_actual_date, p.uat_plan_date, p.uat_actual_date,
+               p.launch_plan_date, p.launch_actual_date, p.accept_plan_date, p.accept_actual_date,
+               p.actual_end_date,
+               p.contract_amount, p.remark, p.del_flag,
+               p.create_by, p.create_time, p.update_by, p.update_time,
+               (select COALESCE(sum(amount), 0) from sys_project_invoice where project_id = p.id) as invoiced_amount,
+               (select count(*) from sys_issue where project_id = p.id and del_flag = '0' and status != '已关闭') as issue_count,
+               (select count(*) from sys_risk where project_id = p.id and del_flag = '0' and status != '已消除') as risk_count,
+               (select count(distinct person_id) from sys_person_project where project_id = p.id) as person_count
+        from sys_project p
     </sql>
 
     <select id="selectProjectList" parameterType="SysProject" resultMap="SysProjectResult">
         <include refid="selectProjectVo"/>
-        where del_flag = '0'
+        where p.del_flag = '0'
+        <if test="keyword != null and keyword != ''">
+            AND (p.name like concat('%', #{keyword}, '%') OR p.customer like concat('%', #{keyword}, '%'))
+        </if>
         <if test="name != null and name != ''">
-            AND name like concat('%', #{name}, '%')
+            AND p.name like concat('%', #{name}, '%')
         </if>
         <if test="customer != null and customer != ''">
-            AND customer like concat('%', #{customer}, '%')
+            AND p.customer like concat('%', #{customer}, '%')
         </if>
         <if test="pmId != null">
-            AND pm_id = #{pmId}
+            AND p.pm_id = #{pmId}
         </if>
         <if test="salesId != null">
-            AND sales_id = #{salesId}
+            AND p.sales_id = #{salesId}
         </if>
         <if test="status != null and status != ''">
-            AND status = #{status}
+            AND p.status = #{status}
         </if>
         <if test="stage != null and stage != ''">
-            AND stage like concat('%', #{stage}, '%')
+            AND p.stage like concat('%', #{stage}, '%')
         </if>
-        order by create_time desc
+        order by p.start_date desc
     </select>
 
     <select id="selectProjectAll" resultMap="SysProjectResult">
         <include refid="selectProjectVo"/>
-        where del_flag = '0'
-        order by name
+        where p.del_flag = '0'
+        order by p.name
     </select>
 
     <select id="selectProjectById" parameterType="Long" resultMap="SysProjectResult">
         <include refid="selectProjectVo"/>
-        where id = #{id} and del_flag = '0'
+        where p.id = #{id} and p.del_flag = '0'
     </select>
 
     <select id="selectProjectByName" parameterType="String" resultMap="SysProjectResult">
         <include refid="selectProjectVo"/>
-        where name = #{name} and del_flag = '0' limit 1
+        where p.name = #{name} and p.del_flag = '0' limit 1
     </select>
 
     <select id="checkNameUnique" parameterType="String" resultMap="SysProjectResult">
         <include refid="selectProjectVo"/>
-        where name = #{name} and del_flag = '0' limit 1
+        where p.name = #{name} and p.del_flag = '0' limit 1
     </select>
 
     <insert id="insertProject" parameterType="SysProject" useGeneratedKeys="true" keyProperty="id">
@@ -98,9 +125,20 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="progress != null">progress,</if>
             <if test="stage != null and stage != ''">stage,</if>
             <if test="status != null and status != ''">status,</if>
+            <if test="isSubordinate != null and isSubordinate != ''">is_subordinate,</if>
+            <if test="projectType != null and projectType != ''">project_type,</if>
             <if test="startDate != null">start_date,</if>
             <if test="endDate != null">end_date,</if>
+            <if test="reqPlanDate != null">req_plan_date,</if>
+            <if test="reqActualDate != null">req_actual_date,</if>
+            <if test="uatPlanDate != null">uat_plan_date,</if>
+            <if test="uatActualDate != null">uat_actual_date,</if>
+            <if test="launchPlanDate != null">launch_plan_date,</if>
+            <if test="launchActualDate != null">launch_actual_date,</if>
+            <if test="acceptPlanDate != null">accept_plan_date,</if>
+            <if test="acceptActualDate != null">accept_actual_date,</if>
             <if test="actualEndDate != null">actual_end_date,</if>
+            <if test="contractAmount != null">contract_amount,</if>
             <if test="remark != null and remark != ''">remark,</if>
             <if test="createBy != null and createBy != ''">create_by,</if>
             create_time
@@ -118,9 +156,20 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="progress != null">#{progress},</if>
             <if test="stage != null and stage != ''">#{stage},</if>
             <if test="status != null and status != ''">#{status},</if>
+            <if test="isSubordinate != null and isSubordinate != ''">#{isSubordinate},</if>
+            <if test="projectType != null and projectType != ''">#{projectType},</if>
             <if test="startDate != null">#{startDate},</if>
             <if test="endDate != null">#{endDate},</if>
+            <if test="reqPlanDate != null">#{reqPlanDate},</if>
+            <if test="reqActualDate != null">#{reqActualDate},</if>
+            <if test="uatPlanDate != null">#{uatPlanDate},</if>
+            <if test="uatActualDate != null">#{uatActualDate},</if>
+            <if test="launchPlanDate != null">#{launchPlanDate},</if>
+            <if test="launchActualDate != null">#{launchActualDate},</if>
+            <if test="acceptPlanDate != null">#{acceptPlanDate},</if>
+            <if test="acceptActualDate != null">#{acceptActualDate},</if>
             <if test="actualEndDate != null">#{actualEndDate},</if>
+            <if test="contractAmount != null">#{contractAmount},</if>
             <if test="remark != null and remark != ''">#{remark},</if>
             <if test="createBy != null and createBy != ''">#{createBy},</if>
             sysdate()
@@ -143,9 +192,20 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="progress != null">progress = #{progress},</if>
             <if test="stage != null and stage != ''">stage = #{stage},</if>
             <if test="status != null and status != ''">status = #{status},</if>
+            <if test="isSubordinate != null and isSubordinate != ''">is_subordinate = #{isSubordinate},</if>
+            <if test="projectType != null and projectType != ''">project_type = #{projectType},</if>
             <if test="startDate != null">start_date = #{startDate},</if>
             <if test="endDate != null">end_date = #{endDate},</if>
+            <if test="reqPlanDate != null">req_plan_date = #{reqPlanDate},</if>
+            <if test="reqActualDate != null">req_actual_date = #{reqActualDate},</if>
+            <if test="uatPlanDate != null">uat_plan_date = #{uatPlanDate},</if>
+            <if test="uatActualDate != null">uat_actual_date = #{uatActualDate},</if>
+            <if test="launchPlanDate != null">launch_plan_date = #{launchPlanDate},</if>
+            <if test="launchActualDate != null">launch_actual_date = #{launchActualDate},</if>
+            <if test="acceptPlanDate != null">accept_plan_date = #{acceptPlanDate},</if>
+            <if test="acceptActualDate != null">accept_actual_date = #{acceptActualDate},</if>
             <if test="actualEndDate != null">actual_end_date = #{actualEndDate},</if>
+            <if test="contractAmount != null">contract_amount = #{contractAmount},</if>
             <if test="remark != null">remark = #{remark},</if>
             <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
             update_time = sysdate()

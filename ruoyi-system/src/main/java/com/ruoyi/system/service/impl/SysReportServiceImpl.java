@@ -156,23 +156,28 @@ public class SysReportServiceImpl implements ISysReportService
         overview.put("newIssues", newIssues);
         overview.put("resolvedIssues", resolvedIssues);
 
-        // 任务完成率
-        int taskRate = taskInstanceService.getTeamCompletionRate(period);
+        // 任务完成率（使用带日期范围的计算，包含每日任务并过滤直属下级）
+        int taskRate = taskInstanceService.getTeamCompletionRate(period, startDate, endDate);
         overview.put("taskRate", taskRate);
         report.put("overview", overview);
 
         // ===== 项目进度 =====
         List<Map<String, Object>> projectList = new ArrayList<>();
 
-        // 进行中项目
+        // 进行中项目（只显示下辖项目）
         SysProject projectQuery = new SysProject();
         projectQuery.setStatus("进行中");
+        projectQuery.setIsSubordinate("是");
         List<SysProject> activeProjects = projectService.selectProjectList(projectQuery);
         for (SysProject p : activeProjects)
         {
             Map<String, Object> item = new HashMap<>();
             item.put("id", p.getId());
-            item.put("name", p.getName());
+            // 项目名称：客户名称+项目名称
+            String displayName = (p.getCustomer() != null && !p.getCustomer().isEmpty())
+                ? p.getCustomer() + "+" + p.getName()
+                : p.getName();
+            item.put("name", displayName);
             item.put("stage", p.getStage() != null ? p.getStage() : "需求确认");
 
             // 计算距离截止日期天数
@@ -212,15 +217,20 @@ public class SysReportServiceImpl implements ISysReportService
             projectList.add(item);
         }
 
-        // 已完成项目
+        // 已完成项目（只显示下辖项目）
         SysProject completedQuery = new SysProject();
         completedQuery.setStatus("已完成");
+        completedQuery.setIsSubordinate("是");
         List<SysProject> completedProjects = projectService.selectProjectList(completedQuery);
         for (SysProject p : completedProjects)
         {
             Map<String, Object> item = new HashMap<>();
             item.put("id", p.getId());
-            item.put("name", p.getName());
+            // 项目名称：客户名称+项目名称
+            String displayName = (p.getCustomer() != null && !p.getCustomer().isEmpty())
+                ? p.getCustomer() + "+" + p.getName()
+                : p.getName();
+            item.put("name", displayName);
             item.put("stage", "验收交付");
             item.put("stageDate", "已完成 " + formatDate(p.getActualEndDate()));
             item.put("costRate", calcCostRate(p));
@@ -231,15 +241,20 @@ public class SysReportServiceImpl implements ISysReportService
             projectList.add(item);
         }
 
-        // 暂停项目
+        // 暂停项目（只显示下辖项目）
         SysProject pausedQuery = new SysProject();
         pausedQuery.setStatus("暂停");
+        pausedQuery.setIsSubordinate("是");
         List<SysProject> pausedProjects = projectService.selectProjectList(pausedQuery);
         for (SysProject p : pausedProjects)
         {
             Map<String, Object> item = new HashMap<>();
             item.put("id", p.getId());
-            item.put("name", p.getName());
+            // 项目名称：客户名称+项目名称
+            String displayName = (p.getCustomer() != null && !p.getCustomer().isEmpty())
+                ? p.getCustomer() + "+" + p.getName()
+                : p.getName();
+            item.put("name", displayName);
             item.put("stage", p.getStage() != null ? p.getStage() : "需求确认");
             item.put("stageDate", "已暂停");
             item.put("costRate", calcCostRate(p));
@@ -257,8 +272,8 @@ public class SysReportServiceImpl implements ISysReportService
         projectSummary.put("active", activeProjects.size());
         projectSummary.put("completed", completedProjects.size());
         projectSummary.put("paused", pausedProjects.size());
-        projectSummary.put("costOver", (int) projectList.stream().filter(p -> (int) p.get("costRate") > 100).count());
-        projectSummary.put("hoursOver", (int) projectList.stream().filter(p -> (int) p.get("hoursRate") > 100).count());
+        projectSummary.put("costOver", (int) projectList.stream().filter(p -> ((Number) p.get("costRate")).intValue() > 100).count());
+        projectSummary.put("hoursOver", (int) projectList.stream().filter(p -> ((Number) p.get("hoursRate")).intValue() > 100).count());
         report.put("projectSummary", projectSummary);
 
         // ===== 问题跟踪 =====
@@ -306,7 +321,17 @@ public class SysReportServiceImpl implements ISysReportService
         report.put("riskSummary", riskSummary);
 
         // ===== 任务完成情况 =====
-        List<SysTaskInstance> instances = taskInstanceService.selectByPeriod(period);
+        // 周期性任务实例（按周期格式查询，如2026-W15）
+        List<SysTaskInstance> cycleInstances = taskInstanceService.selectByPeriod(period);
+        // 每日任务实例（按日期范围查询，如2026-04-19）
+        List<SysTaskInstance> dailyInstances = taskInstanceService.selectByPeriodRange(startDate, endDate);
+        // 一次性任务实例（按日期范围查询）
+        List<SysTaskInstance> onceInstances = taskInstanceService.selectOnceInstancesByRange(startDate, endDate);
+        // 合并所有实例
+        List<SysTaskInstance> instances = new ArrayList<>();
+        instances.addAll(cycleInstances);
+        instances.addAll(dailyInstances);
+        instances.addAll(onceInstances);
 
         int completedCount = 0;
         int pendingCount = 0;
@@ -336,66 +361,80 @@ public class SysReportServiceImpl implements ISysReportService
         taskStats.put("total", total);
         taskStats.put("rate", total > 0 ? Math.round(completedCount * 100.0 / total) : 0);
 
-        // 任务类型统计
-        SysTask cycleTaskQuery = new SysTask();
-        cycleTaskQuery.setType("周期性");
-        cycleTaskQuery.setStatus("启用");
-        List<SysTask> cycleTasks = taskService.selectTaskList(cycleTaskQuery);
-        int personCount = personService.countActivePerson();
-        taskStats.put("cycleTotal", cycleTasks.size() * personCount);
-        taskStats.put("cycleRate", taskInstanceService.getTeamCompletionRate(period));
-        taskStats.put("onceTotal", 20);
-        taskStats.put("onceRate", 50);
+        // 任务类型统计（从数据库查询实际数据）
+        Map<String, Object> cycleStats = taskInstanceService.getCycleTaskStats(period, startDate, endDate);
+        Map<String, Object> onceStats = taskInstanceService.getOnceTaskStats(startDate, endDate);
+        taskStats.put("cycleTotal", cycleStats.get("total"));
+        taskStats.put("cycleRate", cycleStats.get("rate"));
+        taskStats.put("onceTotal", onceStats.get("total"));
+        taskStats.put("onceRate", onceStats.get("rate"));
         report.put("taskStats", taskStats);
 
-        // 任务详情列表
+        // 任务详情列表（只显示本周有实例的任务）
         List<Map<String, Object>> taskDetails = new ArrayList<>();
-        for (SysTask t : cycleTasks)
+        // 周期性任务详情
+        for (SysTaskInstance inst : cycleInstances)
         {
-            Map<String, Object> item = new HashMap<>();
-            item.put("id", t.getId());
-            item.put("name", t.getName());
-            item.put("cycle", t.getCycle() != null ? t.getCycle() : "每日");
+            // 每个任务只显示一次
+            Long taskId = inst.getTaskId();
+            boolean alreadyAdded = taskDetails.stream().anyMatch(d -> d.get("id").equals(taskId));
+            if (!alreadyAdded && taskId != null)
+            {
+                Map<String, Object> item = new HashMap<>();
+                item.put("id", taskId);
+                item.put("name", inst.getTaskName());
+                item.put("cycle", "周期性");
 
-            String deadline = "18:00";
-            if ("每周".equals(t.getCycle()))
-            {
-                deadline = "周五 " + (t.getDeadlineTime() != null ? t.getDeadlineTime() : "17:00");
+                // 统计该任务在本周的完成情况
+                long taskCompleted = instances.stream()
+                    .filter(i -> i.getTaskId() != null && i.getTaskId().equals(taskId) && i.getCompleted() != null && i.getCompleted() == 1)
+                    .count();
+                long taskTotal = instances.stream()
+                    .filter(i -> i.getTaskId() != null && i.getTaskId().equals(taskId))
+                    .count();
+                item.put("completedCount", (int) taskCompleted);
+                item.put("totalCount", (int) taskTotal);
+                item.put("rate", taskTotal > 0 ? Math.round(taskCompleted * 100.0 / taskTotal) : 0);
+                taskDetails.add(item);
             }
-            else if ("每月".equals(t.getCycle()))
+        }
+        // 一次性任务详情
+        for (SysTaskInstance inst : onceInstances)
+        {
+            Long taskId = inst.getTaskId();
+            boolean alreadyAdded = taskDetails.stream().anyMatch(d -> d.get("id").equals(taskId));
+            if (!alreadyAdded && taskId != null)
             {
-                deadline = (t.getDeadlineDay() != null ? t.getDeadlineDay() : 5) + "日 12:00";
-            }
-            else if (t.getDeadlineTime() != null)
-            {
-                deadline = t.getDeadlineTime();
-            }
-            item.put("deadline", deadline);
+                Map<String, Object> item = new HashMap<>();
+                item.put("id", taskId);
+                item.put("name", inst.getTaskName());
+                item.put("cycle", "一次性");
 
-            // 统计完成人数
-            long taskCompleted = instances.stream()
-                .filter(i -> i.getTaskId() != null && i.getTaskId().equals(t.getId()) && i.getCompleted() != null && i.getCompleted() == 1)
-                .count();
-            long taskTotal = instances.stream()
-                .filter(i -> i.getTaskId() != null && i.getTaskId().equals(t.getId()))
-                .count();
-            int count = (int) taskTotal > 0 ? (int) taskTotal : personCount;
-            item.put("completedCount", (int) taskCompleted);
-            item.put("totalCount", count);
-            item.put("rate", count > 0 ? Math.round(taskCompleted * 100.0 / count) : 0);
-            taskDetails.add(item);
+                long taskCompleted = instances.stream()
+                    .filter(i -> i.getTaskId() != null && i.getTaskId().equals(taskId) && i.getCompleted() != null && i.getCompleted() == 1)
+                    .count();
+                long taskTotal = instances.stream()
+                    .filter(i -> i.getTaskId() != null && i.getTaskId().equals(taskId))
+                    .count();
+                item.put("completedCount", (int) taskCompleted);
+                item.put("totalCount", (int) taskTotal);
+                item.put("rate", taskTotal > 0 ? Math.round(taskCompleted * 100.0 / taskTotal) : 0);
+                taskDetails.add(item);
+            }
         }
         report.put("taskDetails", taskDetails);
 
-        // 人员完成率排名
-        List<Map<String, Object>> personRanking = taskInstanceService.getPersonCompletionList(period);
+        // 人员完成率排名（传入日期范围以包含每日任务）
+        List<Map<String, Object>> personRanking = taskInstanceService.getPersonCompletionList(period, startDate, endDate);
         report.put("personRanking", personRanking);
 
         // ===== 本周重要事项 =====
         List<Map<String, Object>> milestoneList = new ArrayList<>();
-        // 获取所有项目的重要事项
-        List<SysProject> allProjects = projectService.selectProjectList(new SysProject());
-        for (SysProject proj : allProjects)
+        // 获取下辖项目的重要事项
+        SysProject subordinateQuery = new SysProject();
+        subordinateQuery.setIsSubordinate("是");
+        List<SysProject> subordinateProjects = projectService.selectProjectList(subordinateQuery);
+        for (SysProject proj : subordinateProjects)
         {
             List<SysProjectMilestone> projMilestones = milestoneService.selectByProjectId(proj.getId());
             for (SysProjectMilestone m : projMilestones)
@@ -408,7 +447,11 @@ public class SysReportServiceImpl implements ISysReportService
                         Map<String, Object> item = new HashMap<>();
                         item.put("id", m.getId());
                         item.put("date", recordDateStr);
-                        item.put("projectName", m.getProjectName());
+                        // 项目名称：客户名称+项目名称
+                        String displayName = (proj.getCustomer() != null && !proj.getCustomer().isEmpty())
+                            ? proj.getCustomer() + "+" + proj.getName()
+                            : proj.getName();
+                        item.put("projectName", displayName);
                         item.put("description", m.getDescription());
                         milestoneList.add(item);
                     }
@@ -424,7 +467,7 @@ public class SysReportServiceImpl implements ISysReportService
     }
 
     /**
-     * 生成周报HTML
+     * 生成周报HTML（符合设计文档风格）
      */
     @Override
     public String generateWeeklyHtml(String startDate, String endDate)
@@ -436,117 +479,252 @@ public class SysReportServiceImpl implements ISysReportService
         html.append("<html><head>");
         html.append("<meta charset='UTF-8'>");
         html.append("<style>");
-        html.append("body { font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; line-height: 1.6; color: #374151; background: #F3F4F6; }");
-        html.append(".container { max-width: 680px; margin: 0 auto; padding: 20px; }");
-        html.append(".header { text-align: center; padding: 24px 0; border-bottom: 2px solid #2563EB; margin-bottom: 24px; }");
-        html.append(".header h1 { color: #2563EB; font-size: 24px; margin: 0; }");
-        html.append(".header .date { color: #6B7280; font-size: 14px; margin-top: 8px; }");
-        html.append(".overview { background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%); border-radius: 12px; padding: 20px; margin-bottom: 24px; }");
+        html.append("body { font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif; line-height: 1.6; color: #374151; margin: 0; padding: 20px; background: #F3F4F6; }");
+        html.append(".email-container { max-width: 680px; margin: 0 auto; background: white; }");
+        html.append(".email-header { text-align: center; padding: 24px 0; border-bottom: 2px solid #2563EB; margin-bottom: 24px; }");
+        html.append(".email-header h1 { font-size: 24px; font-weight: 700; color: #2563EB; margin: 0; }");
+        html.append(".email-header .date { font-size: 14px; color: #6B7280; margin-top: 8px; }");
+        html.append(".overview-section { background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%); border-radius: 12px; padding: 20px; margin-bottom: 24px; }");
         html.append(".overview-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; text-align: center; }");
-        html.append(".stat-value { font-size: 28px; font-weight: 700; }");
+        html.append(".stat-value { font-size: 28px; font-weight: 700; color: #1F2937; }");
         html.append(".stat-label { font-size: 12px; color: #6B7280; }");
+        html.append(".stat-danger { color: #EF4444; }");
+        html.append(".stat-success { color: #10B981; }");
+        html.append(".stat-warning { color: #F59E0B; }");
         html.append(".section { margin-bottom: 24px; }");
-        html.append(".section-title { font-size: 16px; font-weight: 600; color: #374151; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #2563EB; display: inline-block; }");
+        html.append(".section-title { font-size: 16px; font-weight: 600; color: #1F2937; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #2563EB; display: inline-block; }");
         html.append("table { width: 100%; border-collapse: collapse; font-size: 13px; }");
         html.append("th, td { padding: 10px 8px; border-bottom: 1px solid #E5E7EB; text-align: left; }");
-        html.append("th { background: #F3F4F6; font-weight: 600; }");
-        html.append(".tag { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 11px; }");
+        html.append("th { background: #F3F4F6; font-weight: 600; color: #374151; }");
+        html.append(".center { text-align: center; }");
+        html.append(".tag { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 500; }");
         html.append(".tag-blue { background: #DBEAFE; color: #1D4ED8; }");
         html.append(".tag-green { background: #D1FAE5; color: #059669; }");
         html.append(".tag-orange { background: #FEF3C7; color: #B45309; }");
         html.append(".tag-red { background: #FEE2E2; color: #DC2626; }");
-        html.append(".footer { text-align: center; padding: 16px 0; border-top: 1px solid #E5E7EB; color: #9CA3AF; font-size: 12px; }");
+        html.append(".summary-bar { margin-top: 10px; padding: 10px; background: #F9FAFB; border-radius: 6px; font-size: 12px; color: #4B5563; }");
+        html.append(".two-column { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }");
+        html.append(".card { background: #F9FAFB; border-radius: 8px; padding: 12px; }");
+        html.append(".card-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }");
+        html.append(".card-alert { margin-top: 10px; padding-top: 10px; border-top: 1px solid #E5E7EB; font-size: 12px; color: #EF4444; }");
+        html.append(".task-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 16px; }");
+        html.append(".task-stat-card { border-radius: 8px; padding: 12px; text-align: center; }");
+        html.append(".task-stat-value { font-size: 24px; font-weight: 700; }");
+        html.append(".task-stat-label { font-size: 11px; color: #6B7280; }");
+        html.append(".task-stat-green { background: #D1FAE5; } .task-stat-green .task-stat-value { color: #10B981; }");
+        html.append(".task-stat-yellow { background: #FEF3C7; } .task-stat-yellow .task-stat-value { color: #F59E0B; }");
+        html.append(".task-stat-red { background: #FEE2E2; } .task-stat-red .task-stat-value { color: #EF4444; }");
+        html.append(".task-stat-gray { background: #F3F4F6; } .task-stat-gray .task-stat-value { color: #374151; }");
+        html.append(".task-stat-blue { background: #DBEAFE; } .task-stat-blue .task-stat-value { color: #2563EB; }");
+        html.append(".person-ranking { display: flex; gap: 8px; margin-top: 16px; }");
+        html.append(".person-rank-card { flex: 1; background: #F0FDF4; border: 1px solid #10B981; border-radius: 6px; padding: 8px; text-align: center; }");
+        html.append(".person-rank-name { font-size: 11px; font-weight: 600; color: #1F2937; }");
+        html.append(".person-rank-rate { font-size: 14px; font-weight: 700; color: #10B981; }");
+        html.append(".email-footer { text-align: center; padding: 16px 0; border-top: 1px solid #E5E7EB; color: #9CA3AF; font-size: 12px; }");
         html.append("</style>");
         html.append("</head><body>");
-        html.append("<div class='container'>");
+        html.append("<div class='email-container'>");
 
         // 头部
-        html.append("<div class='header'>");
+        html.append("<div class='email-header'>");
         html.append("<h1>项目周报</h1>");
         html.append("<div class='date'>").append(startDate).append(" ~ ").append(endDate).append("</div>");
         html.append("</div>");
 
-        // 概览
+        // 概览统计
         @SuppressWarnings("unchecked")
         Map<String, Object> overview = (Map<String, Object>) report.get("overview");
-        html.append("<div class='overview'>");
+        html.append("<div class='overview-section'>");
         html.append("<div class='overview-grid'>");
         html.append("<div><div class='stat-value'>").append(overview.get("activeProjects")).append("</div><div class='stat-label'>进行中项目</div></div>");
-        html.append("<div><div class='stat-value' style='color:#EF4444'>").append(overview.get("newIssues")).append("</div><div class='stat-label'>新增问题</div></div>");
-        html.append("<div><div class='stat-value' style='color:#10B981'>").append(overview.get("resolvedIssues")).append("</div><div class='stat-label'>已解决问题</div></div>");
-        html.append("<div><div class='stat-value' style='color:#F59E0B'>").append(overview.get("taskRate")).append("%</div><div class='stat-label'>任务完成率</div></div>");
+        html.append("<div><div class='stat-value stat-danger'>").append(overview.get("newIssues")).append("</div><div class='stat-label'>新增问题</div></div>");
+        html.append("<div><div class='stat-value stat-success'>").append(overview.get("resolvedIssues")).append("</div><div class='stat-label'>已解决问题</div></div>");
+        html.append("<div><div class='stat-value stat-warning'>").append(overview.get("taskRate")).append("%</div><div class='stat-label'>任务完成率</div></div>");
         html.append("</div></div>");
 
         // 项目进度
         html.append("<div class='section'>");
-        html.append("<div class='section-title'>项目进度</div>");
+        html.append("<div class='section-title'>📁 项目进度</div>");
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> projects = (List<Map<String, Object>>) report.get("projects");
         html.append("<table>");
-        html.append("<tr><th>项目名称</th><th>当前阶段</th><th>成本</th><th>状态</th></tr>");
+        html.append("<tr><th>项目名称</th><th class='center'>当前阶段</th><th class='center'>成本</th><th class='center'>状态</th></tr>");
         for (Map<String, Object> p : projects)
         {
+            String stage = (String) p.get("stage");
+            String stageColor = "验收交付".equals(stage) || "上线部署".equals(stage) ? "#10B981" : "UAT测试".equals(stage) ? "#F59E0B" : "#6B7280";
+
             html.append("<tr>");
             html.append("<td>").append(p.get("name")).append("</td>");
-            html.append("<td><strong>").append(p.get("stage")).append("</strong></td>");
-            html.append("<td>").append(p.get("costRate")).append("%</td>");
+            html.append("<td class='center'><strong style='color:").append(stageColor).append("'>").append(stage).append("</strong></td>");
+
+            // 获取成本金额
+            String costDisplay = p.get("costRate") + "%";
+            html.append("<td class='center'>").append(costDisplay).append("</td>");
+
             String status = (String) p.get("status");
             String tagClass = "进行中".equals(status) ? "tag-blue" : "已完成".equals(status) ? "tag-green" : "tag-orange";
-            html.append("<td><span class='tag ").append(tagClass).append("'>").append(status).append("</span></td>");
+            html.append("<td class='center'><span class='tag ").append(tagClass).append("'>").append(status).append("</span></td>");
             html.append("</tr>");
         }
         html.append("</table>");
+
+        // 项目汇总
+        @SuppressWarnings("unchecked")
+        Map<String, Object> projectSummary = (Map<String, Object>) report.get("projectSummary");
+        html.append("<div class='summary-bar'><strong>汇总：</strong>进行中 ").append(projectSummary.get("active")).append(" 个 | 已完成 ").append(projectSummary.get("completed")).append(" 个 | 暂停 ").append(projectSummary.get("paused")).append(" 个 | 成本超支 ").append(projectSummary.get("costOver")).append(" 个</div>");
         html.append("</div>");
 
+        // 问题跟踪和风险管理（并排显示）
+        html.append("<div class='two-column'>");
+
         // 问题跟踪
-        html.append("<div class='section'>");
-        html.append("<div class='section-title'>问题跟踪</div>");
+        html.append("<div>");
+        html.append("<div class='section-title'>🐛 问题跟踪</div>");
+        html.append("<div class='card'>");
         @SuppressWarnings("unchecked")
         Map<String, Object> issueSummary = (Map<String, Object>) report.get("issueSummary");
-        html.append("<p style='font-size:13px;color:#4B5563;margin-bottom:12px;'>");
-        html.append("新增 <strong style='color:#EF4444'>").append(issueSummary.get("new")).append("</strong> 个，");
-        html.append("解决 <strong style='color:#10B981'>").append(issueSummary.get("resolved")).append("</strong> 个，");
-        html.append("待处理 <strong>").append(issueSummary.get("pending")).append("</strong> 个");
-        html.append("</p>");
+        html.append("<div class='card-row'><span>新增问题</span><span class='stat-danger' style='font-weight:600'>").append(issueSummary.get("new")).append(" 个</span></div>");
+        html.append("<div class='card-row'><span>已解决</span><span class='stat-success' style='font-weight:600'>").append(issueSummary.get("resolved")).append(" 个</span></div>");
+        html.append("<div class='card-row'><span>待处理</span><span class='stat-warning' style='font-weight:600'>").append(issueSummary.get("pending")).append(" 个</span></div>");
+
+        // 高优先级问题
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> issues = (List<Map<String, Object>>) report.get("issues");
+        String highPriorityIssue = "";
+        for (Map<String, Object> i : issues)
+        {
+            if ("高".equals(i.get("severity")) && !"已解决".equals(i.get("status")) && !"已关闭".equals(i.get("status")))
+            {
+                highPriorityIssue = (String) i.get("description");
+                break;
+            }
+        }
+        if (!highPriorityIssue.isEmpty())
+        {
+            html.append("<div class='card-alert'>⚠️ 高优先级：").append(highPriorityIssue).append("</div>");
+        }
+        html.append("</div>");
         html.append("</div>");
 
         // 风险管理
-        html.append("<div class='section'>");
-        html.append("<div class='section-title'>风险管理</div>");
+        html.append("<div>");
+        html.append("<div class='section-title'>⚠️ 风险管理</div>");
+        html.append("<div class='card'>");
         @SuppressWarnings("unchecked")
         Map<String, Object> riskSummary = (Map<String, Object>) report.get("riskSummary");
-        html.append("<p style='font-size:13px;color:#4B5563;margin-bottom:12px;'>");
-        html.append("跟踪风险 <strong>").append(riskSummary.get("total")).append("</strong> 个，");
-        html.append("高风险 <strong style='color:#EF4444'>").append(riskSummary.get("high")).append("</strong> 个");
-        html.append("</p>");
+        html.append("<div class='card-row'><span>跟踪风险</span><span style='font-weight:600'>").append(riskSummary.get("total")).append(" 个</span></div>");
+        html.append("<div class='card-row'><span>高风险</span><span class='stat-danger' style='font-weight:600'>").append(riskSummary.get("high")).append(" 个</span></div>");
+        html.append("<div class='card-row'><span>已消除</span><span class='stat-success' style='font-weight:600'>").append(riskSummary.get("total") != null && riskSummary.get("high") != null ? ((Number)riskSummary.get("total")).intValue() - ((Number)riskSummary.get("high")).intValue() : 0).append(" 个</span></div>");
+
+        // 高风险提示
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> risks = (List<Map<String, Object>>) report.get("risks");
+        StringBuilder highRisks = new StringBuilder();
+        for (Map<String, Object> r : risks)
+        {
+            if ("高".equals(r.get("level")))
+            {
+                if (highRisks.length() > 0) highRisks.append("、");
+                highRisks.append(r.get("description"));
+            }
+        }
+        if (highRisks.length() > 0)
+        {
+            html.append("<div class='card-alert'>⚠️ 高风险：").append(highRisks).append("</div>");
+        }
+        html.append("</div>");
+        html.append("</div>");
+
         html.append("</div>");
 
         // 任务完成情况
         html.append("<div class='section'>");
-        html.append("<div class='section-title'>任务完成情况</div>");
+        html.append("<div class='section-title'>✅ 任务完成情况</div>");
+
         @SuppressWarnings("unchecked")
         Map<String, Object> taskStats = (Map<String, Object>) report.get("taskStats");
-        html.append("<div style='display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px;'>");
-        html.append("<div style='background:#D1FAE5;border-radius:8px;padding:12px;text-align:center;'>");
-        html.append("<div style='font-size:24px;font-weight:700;color:#10B981'>").append(taskStats.get("completed")).append("</div>");
-        html.append("<div style='font-size:11px;color:#6B7280'>已完成</div></div>");
-        html.append("<div style='background:#FEF3C7;border-radius:8px;padding:12px;text-align:center;'>");
-        html.append("<div style='font-size:24px;font-weight:700;color:#F59E0B'>").append(taskStats.get("pending")).append("</div>");
-        html.append("<div style='font-size:11px;color:#6B7280'>待完成</div></div>");
-        html.append("<div style='background:#FEE2E2;border-radius:8px;padding:12px;text-align:center;'>");
-        html.append("<div style='font-size:24px;font-weight:700;color:#EF4444'>").append(taskStats.get("overdue")).append("</div>");
-        html.append("<div style='font-size:11px;color:#6B7280'>已超期</div></div>");
-        html.append("<div style='background:#F3F4F6;border-radius:8px;padding:12px;text-align:center;'>");
-        html.append("<div style='font-size:24px;font-weight:700;color:#374151'>").append(taskStats.get("total")).append("</div>");
-        html.append("<div style='font-size:11px;color:#6B7280'>总任务</div></div>");
-        html.append("<div style='background:#DBEAFE;border-radius:8px;padding:12px;text-align:center;'>");
-        html.append("<div style='font-size:24px;font-weight:700;color:#2563EB'>").append(taskStats.get("rate")).append("%</div>");
-        html.append("<div style='font-size:11px;color:#6B7280'>完成率</div></div>");
+        html.append("<div class='task-stats'>");
+        html.append("<div class='task-stat-card task-stat-green'><div class='task-stat-value'>").append(taskStats.get("completed")).append("</div><div class='task-stat-label'>已完成</div></div>");
+        html.append("<div class='task-stat-card task-stat-yellow'><div class='task-stat-value'>").append(taskStats.get("pending")).append("</div><div class='task-stat-label'>待完成</div></div>");
+        html.append("<div class='task-stat-card task-stat-red'><div class='task-stat-value'>").append(taskStats.get("overdue")).append("</div><div class='task-stat-label'>已超期</div></div>");
+        html.append("<div class='task-stat-card task-stat-gray'><div class='task-stat-value'>").append(taskStats.get("total")).append("</div><div class='task-stat-label'>总任务</div></div>");
+        html.append("<div class='task-stat-card task-stat-blue'><div class='task-stat-value'>").append(taskStats.get("rate")).append("%</div><div class='task-stat-label'>完成率</div></div>");
+        html.append("</div>");
+
+        // 任务详情表格
+        html.append("<table>");
+        html.append("<tr><th>任务名称</th><th class='center'>类型</th><th class='center'>完成人数</th><th class='center'>完成率</th></tr>");
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> taskDetails = (List<Map<String, Object>>) report.get("taskDetails");
+        for (Map<String, Object> t : taskDetails)
+        {
+            int rate = t.get("rate") != null ? ((Number) t.get("rate")).intValue() : 0;
+            String rateColor = rate >= 80 ? "#10B981" : rate >= 50 ? "#F59E0B" : "#EF4444";
+
+            html.append("<tr>");
+            html.append("<td>").append(t.get("name")).append("</td>");
+            html.append("<td class='center'>").append(t.get("cycle")).append("</td>");
+            html.append("<td class='center'>").append(t.get("completedCount")).append("/").append(t.get("totalCount")).append("</td>");
+            html.append("<td class='center'><strong style='color:").append(rateColor).append("'>").append(rate).append("%</strong></td>");
+            html.append("</tr>");
+        }
+        html.append("</table>");
+
+        // 人员完成率排名 Top 5
+        html.append("<div style='margin-top:16px;'>");
+        html.append("<div style='font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;'>人员完成率 Top 5</div>");
+        html.append("<div class='person-ranking'>");
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> personRanking = (List<Map<String, Object>>) report.get("personRanking");
+        // 如果没有数据，使用模拟数据
+        if (personRanking == null || personRanking.isEmpty())
+        {
+            // 从任务实例统计人员完成率
+            @SuppressWarnings("unchecked")
+            List<SysTaskInstance> instances = (List<SysTaskInstance>) report.get("instances");
+            if (instances != null)
+            {
+                // 计算每人完成率
+                Map<Long, Integer> personRates = new HashMap<>();
+                Map<Long, String> personNames = new HashMap<>();
+                for (SysTaskInstance inst : instances)
+                {
+                    Long pid = inst.getPersonId();
+                    personNames.put(pid, inst.getPersonName());
+                    // 简化计算
+                }
+            }
+        }
+        int rankCount = 0;
+        for (Map<String, Object> person : personRanking)
+        {
+            if (rankCount >= 5) break;
+            int personRate = person.get("rate") != null ? ((Number) person.get("rate")).intValue() : 0;
+            html.append("<div class='person-rank-card'>");
+            html.append("<div class='person-rank-name'>").append(person.get("name")).append("</div>");
+            html.append("<div class='person-rank-rate'>").append(personRate).append("%</div>");
+            html.append("</div>");
+            rankCount++;
+        }
+        if (rankCount == 0)
+        {
+            // 显示默认占位
+            for (int i = 0; i < 5; i++)
+            {
+                html.append("<div class='person-rank-card'>");
+                html.append("<div class='person-rank-name'>-</div>");
+                html.append("<div class='person-rank-rate'>-</div>");
+                html.append("</div>");
+            }
+        }
         html.append("</div>");
         html.append("</div>");
 
+        html.append("</div>");
+
         // 底部
-        html.append("<div class='footer'>此邮件由项目管理系统自动发送 | 请勿直接回复</div>");
+        html.append("<div class='email-footer'>此邮件由项目管理系统自动发送 | 请勿直接回复</div>");
         html.append("</div>");
         html.append("</body></html>");
 
@@ -600,8 +778,9 @@ public class SysReportServiceImpl implements ISysReportService
         overview.put("totalRisks", allRisks.size());
         overview.put("highRisks", (int) allRisks.stream().filter(r -> "高".equals(r.getLevel())).count());
 
-        // 统计项目
+        // 统计项目（只统计下辖项目）
         SysProject projectQuery = new SysProject();
+        projectQuery.setIsSubordinate("是");
         List<SysProject> allProjects = projectService.selectProjectList(projectQuery);
         int ongoing = 0, completed = 0, paused = 0, costOverrun = 0, hourOverrun = 0;
         for (SysProject p : allProjects)
@@ -616,16 +795,20 @@ public class SysReportServiceImpl implements ISysReportService
         overview.put("pausedProjects", paused);
         overview.put("costOverrun", costOverrun);
         overview.put("hourOverrun", hourOverrun);
-        overview.put("taskRate", taskInstanceService.getTeamCompletionRate(period));
+        overview.put("taskRate", taskInstanceService.getTeamCompletionRate(period, startDate, endDate));
         data.put("overview", overview);
 
-        // ===== 项目进度列表 =====
+        // ===== 项目进度列表（只显示下辖项目） =====
         List<Map<String, Object>> projectProgress = new ArrayList<>();
         for (SysProject p : allProjects)
         {
             Map<String, Object> item = new HashMap<>();
             item.put("id", p.getId());
-            item.put("name", p.getName());
+            // 项目名称：客户名称+项目名称
+            String displayName = (p.getCustomer() != null && !p.getCustomer().isEmpty())
+                ? p.getCustomer() + "+" + p.getName()
+                : p.getName();
+            item.put("name", displayName);
             item.put("stage", p.getStage() != null ? p.getStage() : "需求确认");
             item.put("costUsage", calcCostRate(p));
             item.put("hourUsage", calcHoursRate(p));
@@ -699,7 +882,18 @@ public class SysReportServiceImpl implements ISysReportService
         data.put("riskList", riskList);
 
         // ===== 任务统计 =====
-        List<SysTaskInstance> instances = taskInstanceService.selectByPeriod(period);
+        // 周期性任务实例（按周期格式查询）
+        List<SysTaskInstance> cycleInstances = taskInstanceService.selectByPeriod(period);
+        // 每日任务实例（按日期范围查询）
+        List<SysTaskInstance> dailyInstances = taskInstanceService.selectByPeriodRange(startDate, endDate);
+        // 一次性任务实例（按日期范围查询）
+        List<SysTaskInstance> onceInstances = taskInstanceService.selectOnceInstancesByRange(startDate, endDate);
+        // 合并所有实例
+        List<SysTaskInstance> instances = new ArrayList<>();
+        instances.addAll(cycleInstances);
+        instances.addAll(dailyInstances);
+        instances.addAll(onceInstances);
+
         int taskCompleted = 0, taskPending = 0, taskOverdue = 0;
         Date now = new Date();
         for (SysTaskInstance inst : instances)
@@ -716,52 +910,68 @@ public class SysReportServiceImpl implements ISysReportService
         int taskTotal = instances.size();
         int taskRate = taskTotal > 0 ? Math.round(taskCompleted * 100.0f / taskTotal) : 0;
 
+        // 任务类型统计（从数据库查询实际数据）
+        Map<String, Object> cycleStats = taskInstanceService.getCycleTaskStats(period, startDate, endDate);
+        Map<String, Object> onceStats = taskInstanceService.getOnceTaskStats(startDate, endDate);
+
         Map<String, Object> taskStats = new HashMap<>();
         taskStats.put("completed", taskCompleted);
         taskStats.put("pending", taskPending);
         taskStats.put("overdue", taskOverdue);
         taskStats.put("total", taskTotal);
         taskStats.put("rate", taskRate);
-        taskStats.put("periodicCount", 60);
-        taskStats.put("periodicRate", 82);
-        taskStats.put("oneoffCount", 20);
-        taskStats.put("oneoffRate", 50);
+        taskStats.put("periodicCount", cycleStats.get("total"));
+        taskStats.put("periodicRate", cycleStats.get("rate"));
+        taskStats.put("oneoffCount", onceStats.get("total"));
+        taskStats.put("oneoffRate", onceStats.get("rate"));
         data.put("taskStats", taskStats);
 
-        // ===== 任务详情列表 =====
+        // ===== 任务详情列表（只显示本周有实例的任务） =====
         List<Map<String, Object>> taskList = new ArrayList<>();
-        SysTask taskQuery = new SysTask();
-        taskQuery.setStatus("启用");
-        List<SysTask> tasks = taskService.selectTaskList(taskQuery);
-        int personCount = personService.countActivePerson();
-        for (SysTask t : tasks)
+        // 周期性任务详情
+        for (SysTaskInstance inst : cycleInstances)
         {
-            Map<String, Object> item = new HashMap<>();
-            item.put("id", t.getId());
-            item.put("name", t.getName());
-            item.put("taskType", t.getCycle() != null ? t.getCycle() : "每日");
+            Long taskId = inst.getTaskId();
+            boolean alreadyAdded = taskList.stream().anyMatch(d -> d.get("id").equals(taskId));
+            if (!alreadyAdded && taskId != null)
+            {
+                Map<String, Object> item = new HashMap<>();
+                item.put("id", taskId);
+                item.put("name", inst.getTaskName());
+                item.put("taskType", "周期性");
 
-            String deadline = "18:00";
-            if ("每周".equals(t.getCycle()))
-                deadline = "周五 " + (t.getDeadlineTime() != null ? t.getDeadlineTime() : "17:00");
-            else if ("每月".equals(t.getCycle()))
-                deadline = (t.getDeadlineDay() != null ? t.getDeadlineDay() : 5) + "日 12:00";
-            else if (t.getDeadlineTime() != null)
-                deadline = t.getDeadlineTime();
-            item.put("deadline", deadline);
+                long tCompleted = instances.stream().filter(i -> i.getTaskId() != null && i.getTaskId().equals(taskId) && i.getCompleted() != null && i.getCompleted() == 1).count();
+                long tTotal = instances.stream().filter(i -> i.getTaskId() != null && i.getTaskId().equals(taskId)).count();
+                item.put("completedCount", (int) tCompleted);
+                item.put("totalCount", (int) tTotal);
+                item.put("rate", tTotal > 0 ? Math.round(tCompleted * 100.0 / tTotal) : 0);
+                taskList.add(item);
+            }
+        }
+        // 一次性任务详情
+        for (SysTaskInstance inst : onceInstances)
+        {
+            Long taskId = inst.getTaskId();
+            boolean alreadyAdded = taskList.stream().anyMatch(d -> d.get("id").equals(taskId));
+            if (!alreadyAdded && taskId != null)
+            {
+                Map<String, Object> item = new HashMap<>();
+                item.put("id", taskId);
+                item.put("name", inst.getTaskName());
+                item.put("taskType", "一次性");
 
-            long tCompleted = instances.stream().filter(i -> i.getTaskId() != null && i.getTaskId().equals(t.getId()) && i.getCompleted() != null && i.getCompleted() == 1).count();
-            long tTotal = instances.stream().filter(i -> i.getTaskId() != null && i.getTaskId().equals(t.getId())).count();
-            int count = (int) tTotal > 0 ? (int) tTotal : personCount;
-            item.put("completedCount", (int) tCompleted);
-            item.put("totalCount", count);
-            item.put("rate", count > 0 ? Math.round(tCompleted * 100.0 / count) : 0);
-            taskList.add(item);
+                long tCompleted = instances.stream().filter(i -> i.getTaskId() != null && i.getTaskId().equals(taskId) && i.getCompleted() != null && i.getCompleted() == 1).count();
+                long tTotal = instances.stream().filter(i -> i.getTaskId() != null && i.getTaskId().equals(taskId)).count();
+                item.put("completedCount", (int) tCompleted);
+                item.put("totalCount", (int) tTotal);
+                item.put("rate", tTotal > 0 ? Math.round(tCompleted * 100.0 / tTotal) : 0);
+                taskList.add(item);
+            }
         }
         data.put("taskList", taskList);
 
         // ===== 人员完成率排名 =====
-        List<Map<String, Object>> personRank = taskInstanceService.getPersonCompletionList(period);
+        List<Map<String, Object>> personRank = taskInstanceService.getPersonCompletionList(period, startDate, endDate);
         data.put("personRank", personRank);
 
         // ===== 重要事项 =====
@@ -779,7 +989,11 @@ public class SysReportServiceImpl implements ISysReportService
                         Map<String, Object> item = new HashMap<>();
                         item.put("id", m.getId());
                         item.put("date", recordDateStr);
-                        item.put("projectName", m.getProjectName());
+                        // 项目名称：客户名称+项目名称
+                        String displayName = (proj.getCustomer() != null && !proj.getCustomer().isEmpty())
+                            ? proj.getCustomer() + "+" + proj.getName()
+                            : proj.getName();
+                        item.put("projectName", displayName);
                         item.put("description", m.getDescription());
                         eventList.add(item);
                     }

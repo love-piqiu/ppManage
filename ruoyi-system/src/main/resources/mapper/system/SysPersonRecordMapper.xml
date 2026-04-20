@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysPersonRecordMapper">
+
+    <resultMap type="SysPersonRecord" id="SysPersonRecordResult">
+        <id     property="id"           column="id"            />
+        <result property="personId"     column="person_id"     />
+        <result property="personName"   column="person_name"   />
+        <result property="recordType"   column="record_type"   />
+        <result property="content"      column="content"       />
+        <result property="recordDate"   column="record_date"   />
+        <result property="delFlag"      column="del_flag"      />
+        <result property="createBy"     column="create_by"     />
+        <result property="createTime"   column="create_time"   />
+        <result property="updateBy"     column="update_by"     />
+        <result property="updateTime"   column="update_time"   />
+    </resultMap>
+
+    <sql id="selectRecordVo">
+        select id, person_id, person_name, record_type, content, record_date,
+               del_flag, create_by, create_time, update_by, update_time
+        from sys_person_record
+    </sql>
+
+    <select id="selectRecordList" parameterType="SysPersonRecord" resultMap="SysPersonRecordResult">
+        <include refid="selectRecordVo"/>
+        where del_flag = '0'
+        <if test="personId != null">
+            AND person_id = #{personId}
+        </if>
+        <if test="recordType != null and recordType != ''">
+            AND record_type = #{recordType}
+        </if>
+        order by record_date desc, create_time desc
+    </select>
+
+    <select id="selectByPersonId" parameterType="Long" resultMap="SysPersonRecordResult">
+        <include refid="selectRecordVo"/>
+        where person_id = #{personId} and del_flag = '0'
+        order by record_date desc, create_time desc
+    </select>
+
+    <select id="selectRecordById" parameterType="Long" resultMap="SysPersonRecordResult">
+        <include refid="selectRecordVo"/>
+        where id = #{id} and del_flag = '0'
+    </select>
+
+    <insert id="insertRecord" parameterType="SysPersonRecord" useGeneratedKeys="true" keyProperty="id">
+        insert into sys_person_record(
+            <if test="personId != null">person_id,</if>
+            <if test="personName != null and personName != ''">person_name,</if>
+            <if test="recordType != null and recordType != ''">record_type,</if>
+            <if test="content != null and content != ''">content,</if>
+            <if test="recordDate != null">record_date,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            create_time
+        )values(
+            <if test="personId != null">#{personId},</if>
+            <if test="personName != null and personName != ''">#{personName},</if>
+            <if test="recordType != null and recordType != ''">#{recordType},</if>
+            <if test="content != null and content != ''">#{content},</if>
+            <if test="recordDate != null">#{recordDate},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            sysdate()
+        )
+    </insert>
+
+    <update id="updateRecord" parameterType="SysPersonRecord">
+        update sys_person_record
+        <set>
+            <if test="personName != null and personName != ''">person_name = #{personName},</if>
+            <if test="recordType != null and recordType != ''">record_type = #{recordType},</if>
+            <if test="content != null and content != ''">content = #{content},</if>
+            <if test="recordDate != null">record_date = #{recordDate},</if>
+            <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+            update_time = sysdate()
+        </set>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteRecordById" parameterType="Long">
+        update sys_person_record set del_flag = '2' where id = #{id}
+    </delete>
+
+    <delete id="deleteRecordByIds" parameterType="Long">
+        update sys_person_record set del_flag = '2' where id in
+        <foreach collection="array" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <delete id="deleteRecordByPersonId" parameterType="Long">
+        update sys_person_record set del_flag = '2' where person_id = #{personId}
+    </delete>
+
+</mapper>

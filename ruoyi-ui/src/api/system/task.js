@@ -78,6 +78,14 @@ export function completeTask(id, remark) {
   })
 }
 
+// 取消完成任务
+export function uncompleteTask(id) {
+  return request({
+    url: '/system/task/instance/uncomplete/' + id,
+    method: 'put'
+  })
+}
+
 // 删除任务实例
 export function delInstance(id) {
   return request({
@@ -106,6 +114,14 @@ export function getTeamCompletionRate(period) {
 export function getPeriodStatistics(period) {
   return request({
     url: '/system/task/statistics/period/' + period,
+    method: 'get'
+  })
+}
+
+// 获取一次性任务的统计数据
+export function getOnceTaskStatistics() {
+  return request({
+    url: '/system/task/statistics/once',
     method: 'get'
   })
 }

@@ -27,6 +27,10 @@ public class SysRisk extends BaseEntity
     @Excel(name = "项目名称")
     private String projectName;
 
+    /** 客户名称 */
+    @Excel(name = "客户名称")
+    private String customer;
+
     /** 风险描述 */
     @Excel(name = "风险描述")
     @NotNull(message = "风险描述不能为空")
@@ -39,6 +43,10 @@ public class SysRisk extends BaseEntity
     /** 状态:潜在/已发生/已消除 */
     @Excel(name = "状态")
     private String status;
+
+    /** 风险类别:进度风险/质量风险/成本风险 */
+    @Excel(name = "风险类别")
+    private String category;
 
     /** 应对措施 */
     @Excel(name = "应对措施")
@@ -94,6 +102,16 @@ public class SysRisk extends BaseEntity
         this.projectName = projectName;
     }
 
+    public String getCustomer()
+    {
+        return customer;
+    }
+
+    public void setCustomer(String customer)
+    {
+        this.customer = customer;
+    }
+
     public String getDescription()
     {
         return description;
@@ -122,6 +140,16 @@ public class SysRisk extends BaseEntity
     public void setStatus(String status)
     {
         this.status = status;
+    }
+
+    public String getCategory()
+    {
+        return category;
+    }
+
+    public void setCategory(String category)
+    {
+        this.category = category;
     }
 
     public String getMeasure()

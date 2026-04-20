@@ -18,7 +18,7 @@
       <div class="pp-filter-group">
         <span class="pp-filter-label">所属项目</span>
         <el-select v-model="queryParams.projectId" placeholder="全部项目" clearable filterable size="small" class="pp-filter-select" @change="handleQuery">
-          <el-option v-for="item in projectOptions" :key="item.id" :label="item.name" :value="item.id" />
+          <el-option v-for="item in projectOptions" :key="item.id" :label="item.customer + '-' + item.name" :value="item.id" />
         </el-select>
       </div>
       <div class="pp-filter-group">
@@ -95,7 +95,7 @@
       <tbody>
         <tr v-for="(row, index) in issueList" :key="index">
           <td>
-            <a class="pp-project-link" @click="goToProject(row)">{{ row.projectName || '-' }}</a>
+            <a class="pp-project-link" @click="goToProject(row)">{{ row.customer }}-{{ row.projectName || '-' }}</a>
           </td>
           <td>
             <div class="pp-issue-desc" @click="handleDetail(row)">{{ row.description }}</div>
@@ -140,7 +140,7 @@
       <el-form ref="form" :model="form" :rules="rules" label-width="100px">
         <el-form-item label="项目" prop="projectId">
           <el-select v-model="form.projectId" placeholder="请选择项目" filterable @change="handleProjectChange">
-            <el-option v-for="item in projectOptions" :key="item.id" :label="item.name" :value="item.id" />
+            <el-option v-for="item in projectOptions" :key="item.id" :label="item.customer + '-' + item.name" :value="item.id" />
           </el-select>
         </el-form-item>
         <el-form-item label="问题描述" prop="description">

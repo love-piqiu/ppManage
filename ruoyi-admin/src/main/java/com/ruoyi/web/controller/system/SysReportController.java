@@ -129,8 +129,15 @@ public class SysReportController extends BaseController
         String html = reportService.generateWeeklyHtml(startDate, endDate);
         String subject = "项目周报 - " + startDate + " 至 " + endDate;
 
-        boolean result = emailService.sendWeeklyReport(subject, html);
-        return result ? success("邮件发送成功") : error("邮件发送失败");
+        String error = emailService.sendWeeklyReportWithDetail(subject, html);
+        if (error == null)
+        {
+            return success("邮件发送成功");
+        }
+        else
+        {
+            return error("邮件发送失败: " + error);
+        }
     }
 
     /**
@@ -141,6 +148,18 @@ public class SysReportController extends BaseController
     public AjaxResult getEmailConfig()
     {
         SysEmailConfig config = emailConfigService.getConfig();
+        // 隐藏真实密码，返回占位符表示密码已配置
+        if (config != null)
+        {
+            if (config.getPassword() != null && !config.getPassword().isEmpty())
+            {
+                config.setPassword("******"); // 占位符表示密码已存在
+            }
+            else
+            {
+                config.setPassword(null);
+            }
+        }
         return success(config);
     }
 
@@ -162,10 +181,17 @@ public class SysReportController extends BaseController
     @PreAuthorize("@ss.hasPermi('report:weekly:edit')")
     @Log(title = "邮件配置", businessType = BusinessType.OTHER)
     @PostMapping("/email/test")
-    public AjaxResult testEmail(@RequestBody SysEmailConfig config)
+    public AjaxResult testEmail()
     {
-        boolean result = emailService.sendTestEmail();
-        return result ? success("测试邮件已发送") : error("发送失败，请检查配置");
+        String error = emailService.sendTestEmailWithDetail();
+        if (error == null)
+        {
+            return success("测试邮件发送成功，请检查收件箱");
+        }
+        else
+        {
+            return error(error);
+        }
     }
 
     /**

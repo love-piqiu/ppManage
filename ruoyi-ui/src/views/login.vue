@@ -1,7 +1,9 @@
 <template>
   <div class="login">
     <el-form ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form">
-      <h3 class="title">{{title}}</h3>
+      <h3 class="title">
+        <span class="title-art">{{title}}</span>
+      </h3>
       <el-form-item prop="username">
         <el-input
           v-model="loginForm.username"
@@ -56,7 +58,9 @@
     </el-form>
     <!--  底部  -->
     <div class="el-login-footer">
-      <span>{{ footerContent }}</span>
+      <div class="footer-divider"></div>
+      <span class="footer-text">{{ footerContent }}</span>
+      <div class="footer-divider"></div>
     </div>
   </div>
 </template>
@@ -164,13 +168,27 @@ export default {
   justify-content: center;
   align-items: center;
   height: 100%;
-  background-image: url("../assets/images/login-background.jpg");
+  background-image: url("../assets/images/login-background.jpeg");
   background-size: cover;
 }
 .title {
   margin: 0px auto 30px auto;
   text-align: center;
-  color: #707070;
+}
+.title-art {
+  font-family: 'PingFang SC', 'Microsoft YaHei', serif;
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: 8px;
+  color: #2563EB;
+  position: relative;
+  display: inline-block;
+  background: linear-gradient(135deg, #2563EB 0%, #7C3AED 50%, #EC4899 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: none;
+  filter: drop-shadow(0 4px 8px rgba(37, 99, 235, 0.2));
 }
 
 .login-form {
@@ -206,16 +224,28 @@ export default {
   }
 }
 .el-login-footer {
-  height: 40px;
-  line-height: 40px;
+  height: 80px;
   position: fixed;
   bottom: 0;
   width: 100%;
   text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+}
+.footer-divider {
+  width: 40px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
+}
+.footer-text {
   color: #fff;
-  font-family: Arial;
-  font-size: 12px;
-  letter-spacing: 1px;
+  font-family: 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif;
+  font-size: 16px;
+  letter-spacing: 3px;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  font-weight: 300;
 }
 .login-code-img {
   height: 38px;

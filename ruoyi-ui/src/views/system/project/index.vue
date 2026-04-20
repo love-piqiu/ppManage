@@ -18,10 +18,7 @@
       <div class="pp-filter-group">
         <span class="pp-filter-label">项目状态</span>
         <el-select v-model="queryParams.status" placeholder="全部状态" clearable size="small" class="pp-filter-select" @change="handleQuery">
-          <el-option label="全部状态" value="" />
-          <el-option label="进行中" value="进行中" />
-          <el-option label="已完成" value="已完成" />
-          <el-option label="暂停" value="暂停" />
+          <el-option v-for="opt in projectStatusOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
         </el-select>
       </div>
       <div class="pp-filter-group">
@@ -65,61 +62,66 @@
       <thead>
         <tr>
           <th style="min-width: 140px;">项目名称</th>
-          <th>客户</th>
           <th>项目经理</th>
           <th style="min-width: 100px;">使用比例</th>
           <th style="min-width: 160px;">里程碑时间点</th>
           <th style="min-width: 180px;">开票情况</th>
-          <th>状态</th>
           <th style="min-width: 120px;">操作</th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(row, index) in projectList" :key="index" :style="{ opacity: row.status === '已完成' || row.status === '暂停' ? 0.7 : 1 }">
+        <tr v-for="(row, index) in projectList" :key="index" :style="{ opacity: row.status === projectStatus.COMPLETED || row.status === projectStatus.PAUSED ? 0.7 : 1 }">
           <td>
             <div class="pp-project-name-cell">
-              <a class="pp-project-link" :class="{ danger: row.hasAlert }" @click="handleDetail(row)">{{ row.name }}</a>
-              <span class="pp-alert-badge issue" v-if="row.issueCount > 0" @click="goToIssues(row)">⚠ {{ row.issueCount }}问题</span>
-              <span class="pp-alert-badge risk" v-if="row.riskCount > 0" @click="goToRisks(row)">⚡ {{ row.riskCount }}风险</span>
+              <div class="pp-project-name-row">
+                <span class="pp-project-name-wrapper">
+                  <a class="pp-project-link" :class="{ danger: row.hasAlert }" @click="handleDetail(row)">{{ row.customer }}-{{ row.name }}</a>
+                  <span class="pp-outsource-tag" v-if="row.projectType === projectType.OUTSOURCE">外</span>
+                </span>
+                <div class="pp-alert-badges">
+                  <span class="pp-alert-badge issue" v-if="row.issueCount > 0" @click="goToIssues(row)">⚠ {{ row.issueCount }}</span>
+                  <span class="pp-alert-badge risk" v-if="row.riskCount > 0" @click="goToRisks(row)">⚡ {{ row.riskCount }}</span>
+                </div>
+              </div>
             </div>
           </td>
-          <td>{{ row.customer || '-' }}</td>
           <td>{{ row.pmName || '-' }}</td>
           <td>
             <div class="pp-usage-cell">
               <div class="pp-usage-row">
                 <span class="pp-usage-label">成本</span>
                 <div class="pp-usage-bar">
-                  <div class="pp-usage-fill" :class="getUsageClass(row.costUsage)" :style="{ width: Math.min(row.costUsage, 100) + '%' }"></div>
+                  <div class="pp-usage-fill" :class="getUsageClass(row.costUsage)" :style="{ width: Math.max(Math.min(row.costUsage, 100), row.costUsage > 0 ? 5 : 0) + '%' }"></div>
                 </div>
                 <span class="pp-usage-value" :class="{ danger: row.costUsage > 100 }">{{ row.costUsage || 0 }}%</span>
               </div>
               <div class="pp-usage-row">
                 <span class="pp-usage-label">工时</span>
                 <div class="pp-usage-bar">
-                  <div class="pp-usage-fill" :class="getUsageClass(row.hourUsage)" :style="{ width: Math.min(row.hourUsage, 100) + '%' }"></div>
+                  <div class="pp-usage-fill" :class="getUsageClass(row.hourUsage)" :style="{ width: Math.max(Math.min(row.hourUsage, 100), row.hourUsage > 0 ? 5 : 0) + '%' }"></div>
                 </div>
                 <span class="pp-usage-value" :class="{ danger: row.hourUsage > 100 }">{{ row.hourUsage || 0 }}%</span>
               </div>
             </div>
           </td>
           <td>
-            <div class="pp-milestone-cell">
+            <div class="pp-milestone-cell" v-if="row.isSubordinate === subordinate.YES">
               <div class="pp-milestone-item" v-for="(m, mi) in row.milestones" :key="mi">
                 <span class="pp-milestone-label">{{ m.name }}</span>
-                <span class="pp-milestone-date" :class="getMilestoneClass(m)">{{ m.date || '待定' }}</span>
-                <span class="pp-milestone-dot" :class="getMilestoneDotClass(m)"></span>
+                <span class="pp-milestone-date" :class="m.statusClass">{{ m.displayDate }}</span>
+                <span class="pp-milestone-dot" :class="m.dotClass"></span>
               </div>
             </div>
+            <span v-else class="pp-no-milestone">-</span>
           </td>
           <td>
             <div class="pp-invoice-cell">
               <div class="pp-invoice-header">
-                <span>合同: ¥{{ row.contractAmount || 0 }}万</span>
-                <span class="pp-invoice-total">已开: ¥{{ row.invoicedAmount || 0 }}万</span>
+                <span>合同: ¥{{ row.contractAmount || 0 }}元</span>
+                <span class="pp-invoice-total">已开: ¥{{ row.invoicedAmount || 0 }}元</span>
               </div>
               <div class="pp-invoice-item" v-for="(inv, ii) in row.invoices" :key="ii">
-                <span class="pp-invoice-amount">¥{{ inv.amount }}万</span>
+                <span class="pp-invoice-amount">¥{{ inv.amount }}元</span>
                 <span class="pp-invoice-percent">{{ inv.percent }}%</span>
                 <span class="pp-invoice-type" :class="inv.type">{{ inv.type }}</span>
               </div>
@@ -127,18 +129,15 @@
             </div>
           </td>
           <td>
-            <span class="pp-status-tag" :class="statusClass(row.status)">{{ row.status }}</span>
-          </td>
-          <td>
             <div class="pp-action-btns">
-              <button class="pp-action-btn" @click="handleDetail(row)">详情</button>
-              <button class="pp-action-btn" @click="handleUpdate(row)">编辑</button>
+              <button class="pp-action-btn primary" @click="handleDetail(row)">详情</button>
+              <button class="pp-action-btn warning" @click="handleUpdate(row)">编辑</button>
               <button class="pp-action-btn danger" @click="handleDelete(row)">删除</button>
             </div>
           </td>
         </tr>
         <tr v-if="projectList.length === 0">
-          <td colspan="8" class="pp-empty-tip">暂无项目数据</td>
+          <td colspan="6" class="pp-empty-tip">暂无项目数据</td>
         </tr>
       </tbody>
     </table>
@@ -156,6 +155,7 @@
     <!-- 添加/编辑项目对话框 -->
     <el-dialog :title="title" :visible.sync="open" width="640px" append-to-body custom-class="pp-dialog">
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
+        <!-- 基本信息 - 所有项目都有 -->
         <el-row :gutter="12">
           <el-col :span="12">
             <el-form-item label="项目名称" prop="name">
@@ -170,69 +170,17 @@
         </el-row>
         <el-row :gutter="12">
           <el-col :span="12">
-            <el-form-item label="项目经理" prop="pmId">
-              <el-select v-model="form.pmId" placeholder="请选择" filterable style="width:100%" @change="handlePmChange">
-                <el-option v-for="item in personOptions" :key="item.id" :label="item.name" :value="item.id" />
-              </el-select>
+            <el-form-item label="项目经理" prop="pmName">
+              <el-input v-model="form.pmName" placeholder="请输入项目经理姓名" />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
-            <el-form-item label="销售人员" prop="salesId">
-              <el-select v-model="form.salesId" placeholder="请选择" filterable style="width:100%" @change="handleSalesChange">
-                <el-option v-for="item in personOptions" :key="item.id" :label="item.name" :value="item.id" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="12">
-          <el-col :span="12">
-            <el-form-item label="成本(万)" prop="cost">
-              <el-input-number v-model="form.cost" :precision="2" :min="0" style="width:100%" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="已用(万)" prop="costUsed">
-              <el-input-number v-model="form.costUsed" :precision="2" :min="0" style="width:100%" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="12">
-          <el-col :span="12">
-            <el-form-item label="工时(天)" prop="workHours">
-              <el-input-number v-model="form.workHours" :min="0" style="width:100%" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="已用(天)" prop="workHoursUsed">
-              <el-input-number v-model="form.workHoursUsed" :min="0" style="width:100%" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="12">
-          <el-col :span="12">
-            <el-form-item label="合同(万)" prop="contractAmount">
-              <el-input-number v-model="form.contractAmount" :precision="2" :min="0" style="width:100%" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="进度%" prop="progress">
-              <el-input-number v-model="form.progress" :min="0" :max="100" style="width:100%" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="12">
           <el-col :span="12">
             <el-form-item label="状态" prop="status">
               <el-select v-model="form.status" placeholder="请选择" style="width:100%">
-                <el-option label="进行中" value="进行中" />
-                <el-option label="已完成" value="已完成" />
-                <el-option label="暂停" value="暂停" />
+                <el-option label="进行中" :value="projectStatus.ONGOING" />
+                <el-option label="已完成" :value="projectStatus.COMPLETED" />
+                <el-option label="暂停" :value="projectStatus.PAUSED" />
               </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="当前阶段" prop="stage">
-              <el-input v-model="form.stage" placeholder="请输入" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -248,6 +196,104 @@
             </el-form-item>
           </el-col>
         </el-row>
+        <el-row :gutter="12">
+          <el-col :span="12">
+            <el-form-item label="是否下辖" prop="isSubordinate">
+              <el-switch v-model="form.isSubordinate" :active-value="subordinate.YES" :inactive-value="subordinate.NO" />
+              <div class="pp-form-tip">下辖项目有风险管理、问题管理、重要事项</div>
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <!-- 下辖项目特有字段 -->
+        <template v-if="form.isSubordinate === subordinate.YES">
+          <el-row :gutter="12">
+            <el-col :span="12">
+              <el-form-item label="项目类型" prop="projectType">
+                <el-select v-model="form.projectType" placeholder="请选择" style="width:100%" @change="handleProjectTypeChange">
+                  <el-option label="项目" :value="projectType.PROJECT" />
+                  <el-option label="外包" :value="projectType.OUTSOURCE" />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="销售人员" prop="salesName">
+                <el-input v-model="form.salesName" placeholder="请输入销售人员姓名" />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row :gutter="12">
+            <el-col :span="12">
+              <el-form-item label="成本(元)" prop="cost">
+                <el-input-number v-model="form.cost" :precision="2" :min="0" style="width:100%" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="已用(元)" prop="costUsed">
+                <el-input-number v-model="form.costUsed" :precision="2" :min="0" style="width:100%" />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row :gutter="12">
+            <el-col :span="12">
+              <el-form-item label="工时(时)" prop="workHours">
+                <el-input-number v-model="form.workHours" :min="0" style="width:100%" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="已用(时)" prop="workHoursUsed">
+                <el-input-number v-model="form.workHoursUsed" :min="0" style="width:100%" />
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </template>
+
+        <!-- 里程碑时间点 - 下辖项目且项目类型 -->
+        <template v-if="form.isSubordinate === subordinate.YES">
+          <div class="pp-milestone-form-section" v-if="form.projectType === projectType.PROJECT">
+            <div class="pp-milestone-form-title">里程碑时间点</div>
+            <div class="pp-milestone-row-item">
+              <span class="pp-milestone-row-label">需求确认</span>
+              <el-date-picker v-model="form.reqPlanDate" type="date" value-format="yyyy-MM-dd" placeholder="计划时间" class="pp-milestone-picker" />
+              <el-date-picker v-model="form.reqActualDate" type="date" value-format="yyyy-MM-dd" placeholder="完成时间" class="pp-milestone-picker" />
+            </div>
+            <div class="pp-milestone-row-item">
+              <span class="pp-milestone-row-label">UAT测试</span>
+              <el-date-picker v-model="form.uatPlanDate" type="date" value-format="yyyy-MM-dd" placeholder="计划时间" class="pp-milestone-picker" />
+              <el-date-picker v-model="form.uatActualDate" type="date" value-format="yyyy-MM-dd" placeholder="完成时间" class="pp-milestone-picker" />
+            </div>
+            <div class="pp-milestone-row-item">
+              <span class="pp-milestone-row-label">上线</span>
+              <el-date-picker v-model="form.launchPlanDate" type="date" value-format="yyyy-MM-dd" placeholder="计划时间" class="pp-milestone-picker" />
+              <el-date-picker v-model="form.launchActualDate" type="date" value-format="yyyy-MM-dd" placeholder="完成时间" class="pp-milestone-picker" />
+            </div>
+            <div class="pp-milestone-row-item">
+              <span class="pp-milestone-row-label">验收</span>
+              <el-date-picker v-model="form.acceptPlanDate" type="date" value-format="yyyy-MM-dd" placeholder="计划时间" class="pp-milestone-picker" />
+              <el-date-picker v-model="form.acceptActualDate" type="date" value-format="yyyy-MM-dd" placeholder="完成时间" class="pp-milestone-picker" />
+            </div>
+          </div>
+
+          <!-- 里程碑时间点 - 外包类型：自定义里程碑 -->
+          <div class="pp-milestone-form-section" v-if="form.projectType === projectType.OUTSOURCE">
+            <div class="pp-milestone-form-title">自定义里程碑时间点</div>
+            <div class="pp-custom-milestone-list">
+              <div class="pp-custom-milestone-item" v-for="(item, index) in form.customMilestones" :key="index">
+                <el-input v-model="item.milestoneName" placeholder="里程碑名称" class="pp-milestone-name-input" />
+                <el-date-picker v-model="item.planDate" type="date" value-format="yyyy-MM-dd" placeholder="计划时间" class="pp-milestone-picker" />
+                <el-date-picker v-model="item.actualDate" type="date" value-format="yyyy-MM-dd" placeholder="完成时间" class="pp-milestone-picker" />
+                <button type="button" class="pp-remove-milestone-btn" @click="removeCustomMilestone(index)">删除</button>
+              </div>
+              <button type="button" class="pp-add-milestone-btn" @click="addCustomMilestone">+ 添加里程碑</button>
+            </div>
+          </div>
+        </template>
+
+        <el-form-item label="参与人员" prop="participants">
+          <el-select v-model="form.participants" multiple placeholder="请选择参与人员" filterable style="width:100%">
+            <el-option v-for="item in personOptions" :key="item.id" :label="item.name" :value="item.id" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="备注" prop="remark">
           <el-input v-model="form.remark" type="textarea" :rows="2" placeholder="请输入备注" />
         </el-form-item>
@@ -271,8 +317,8 @@
           </div>
         </div>
 
-        <!-- 使用比例 -->
-        <div class="pp-usage-section">
+        <!-- 使用比例 - 仅下辖项目 -->
+        <div class="pp-usage-section" v-if="detailData.isSubordinate === subordinate.YES">
           <div class="pp-usage-card" :class="{ danger: detailData.costUsage > 100 }">
             <div class="pp-usage-card-header">
               <span class="pp-usage-card-label">成本使用</span>
@@ -282,8 +328,8 @@
               <div class="pp-usage-card-fill" :style="{ width: Math.min(detailData.costUsage || 0, 100) + '%' }"></div>
             </div>
             <div class="pp-usage-card-footer">
-              <span>已用: <strong :class="{ danger: detailData.costUsage > 100 }">¥{{ detailData.costUsed || 0 }}万</strong></span>
-              <span>预算: ¥{{ detailData.cost || 0 }}万</span>
+              <span>已用: <strong :class="{ danger: detailData.costUsage > 100 }">¥{{ detailData.costUsed || 0 }}元</strong></span>
+              <span>预算: ¥{{ detailData.cost || 0 }}元</span>
             </div>
           </div>
           <div class="pp-usage-card" :class="{ warning: detailData.hourUsage > 80 }">
@@ -295,8 +341,8 @@
               <div class="pp-usage-card-fill hour" :style="{ width: Math.min(detailData.hourUsage || 0, 100) + '%' }"></div>
             </div>
             <div class="pp-usage-card-footer">
-              <span>已用: <strong>{{ detailData.workHoursUsed || 0 }}人天</strong></span>
-              <span>预算: {{ detailData.workHours || 0 }}人天</span>
+              <span>已用: <strong>{{ detailData.workHoursUsed || 0 }}小时</strong></span>
+              <span>预算: {{ detailData.workHours || 0 }}小时</span>
             </div>
           </div>
         </div>
@@ -308,37 +354,52 @@
             <div class="pp-info-value link">{{ detailData.pmName || '-' }}</div>
           </div>
           <div class="pp-info-item">
-            <div class="pp-info-label">销售人员</div>
-            <div class="pp-info-value">{{ detailData.salesName || '-' }}</div>
+            <div class="pp-info-label">开始日期</div>
+            <div class="pp-info-value">{{ detailData.startDate || '-' }}</div>
           </div>
           <div class="pp-info-item">
-            <div class="pp-info-label">项目成本</div>
-            <div class="pp-info-value">¥ {{ detailData.cost || 0 }} 万</div>
+            <div class="pp-info-label">结束日期</div>
+            <div class="pp-info-value">{{ detailData.endDate || '-' }}</div>
           </div>
           <div class="pp-info-item">
-            <div class="pp-info-label">合同金额</div>
-            <div class="pp-info-value">¥ {{ detailData.contractAmount || 0 }} 万</div>
+            <div class="pp-info-label">参与人员</div>
+            <div class="pp-info-value">{{ detailData.personCount || 0 }}人</div>
           </div>
-          <div class="pp-info-item">
-            <div class="pp-info-label">已开票</div>
-            <div class="pp-info-value success">¥ {{ detailData.invoicedAmount || 0 }} 万</div>
-          </div>
+          <!-- 下辖项目特有 -->
+          <template v-if="detailData.isSubordinate === subordinate.YES">
+            <div class="pp-info-item">
+              <div class="pp-info-label">销售人员</div>
+              <div class="pp-info-value">{{ detailData.salesName || '-' }}</div>
+            </div>
+            <div class="pp-info-item">
+              <div class="pp-info-label">项目成本</div>
+              <div class="pp-info-value">¥ {{ detailData.cost || 0 }} 元</div>
+            </div>
+            <div class="pp-info-item">
+              <div class="pp-info-label">合同金额</div>
+              <div class="pp-info-value">¥ {{ detailData.contractAmount || 0 }} 元</div>
+            </div>
+            <div class="pp-info-item">
+              <div class="pp-info-label">已开票</div>
+              <div class="pp-info-value success">¥ {{ detailData.invoicedAmount || 0 }} 元</div>
+            </div>
+          </template>
         </div>
 
-        <!-- 里程碑时间点 -->
-        <div class="pp-milestone-section">
+        <!-- 里程碑时间点 - 仅下辖项目 -->
+        <div class="pp-milestone-section" v-if="detailData.isSubordinate === subordinate.YES">
           <div class="pp-milestone-header">里程碑时间点</div>
           <div class="pp-milestone-grid">
             <div class="pp-milestone-card" v-for="(m, mi) in detailMilestones" :key="mi" :class="getMilestoneCardClass(m)">
               <div class="pp-milestone-card-label">{{ m.name }}</div>
-              <div class="pp-milestone-card-date" :class="getMilestoneClass(m)">{{ m.date || '待定' }}</div>
+              <div class="pp-milestone-card-date" :class="m.statusClass">{{ m.displayDate || milestoneDisplay.PENDING }}</div>
               <div class="pp-milestone-card-status">{{ getMilestoneStatus(m) }}</div>
             </div>
           </div>
         </div>
 
-        <!-- 关联数据统计 -->
-        <div class="pp-related-cards">
+        <!-- 关联数据统计 - 仅下辖项目 -->
+        <div class="pp-related-cards" v-if="detailData.isSubordinate === subordinate.YES">
           <div class="pp-related-card danger" @click="goToIssues(detailData)">
             <div class="pp-related-num">{{ detailData.issueCount || 0 }}</div>
             <div class="pp-related-label">待处理问题</div>
@@ -357,9 +418,11 @@
       <!-- Tab 导航 -->
       <div class="pp-tab-nav">
         <div class="pp-tab-item" :class="{ active: activeTab === 'info' }" @click="activeTab = 'info'">基本信息</div>
-        <div class="pp-tab-item" :class="{ active: activeTab === 'milestone' }" @click="activeTab = 'milestone'">重要事项 <span class="pp-tab-badge">{{ milestones.length }}</span></div>
-        <div class="pp-tab-item" :class="{ active: activeTab === 'issues' }" @click="activeTab = 'issues'">问题 <span class="pp-tab-badge">{{ detailData.issueCount || 0 }}</span></div>
-        <div class="pp-tab-item" :class="{ active: activeTab === 'risks' }" @click="activeTab = 'risks'">风险 <span class="pp-tab-badge">{{ detailData.riskCount || 0 }}</span></div>
+        <template v-if="detailData.isSubordinate === subordinate.YES">
+          <div class="pp-tab-item" :class="{ active: activeTab === 'milestone' }" @click="activeTab = 'milestone'">重要事项 <span class="pp-tab-badge">{{ milestones.length }}</span></div>
+          <div class="pp-tab-item" :class="{ active: activeTab === 'issues' }" @click="activeTab = 'issues'">问题 <span class="pp-tab-badge">{{ detailData.issueCount || 0 }}</span></div>
+          <div class="pp-tab-item" :class="{ active: activeTab === 'risks' }" @click="activeTab = 'risks'">风险 <span class="pp-tab-badge">{{ detailData.riskCount || 0 }}</span></div>
+        </template>
       </div>
 
       <!-- Tab 内容 -->
@@ -431,13 +494,13 @@
     <!-- 开票对话框 -->
     <el-dialog title="项目开票" :visible.sync="invoiceOpen" width="500px" append-to-body custom-class="pp-dialog">
       <div class="pp-invoice-dialog-header">
-        <span>合同金额: ¥{{ invoiceProject.contractAmount || 0 }}万</span>
-        <span class="pp-invoice-total">已开票: ¥{{ invoiceList.reduce((sum, i) => sum + (i.amount || 0), 0) }}万</span>
+        <span>合同金额: ¥{{ invoiceProject.contractAmount || 0 }}元</span>
+        <span class="pp-invoice-total">已开票: ¥{{ invoiceList.reduce((sum, i) => sum + (i.amount || 0), 0) }}元</span>
       </div>
       <!-- 已有开票列表 -->
       <div class="pp-invoice-list" v-if="invoiceList.length > 0">
         <div class="pp-invoice-row" v-for="(inv, idx) in invoiceList" :key="idx">
-          <span class="pp-invoice-amount">¥{{ inv.amount }}万</span>
+          <span class="pp-invoice-amount">¥{{ inv.amount }}元</span>
           <span class="pp-invoice-percent">{{ inv.percent }}%</span>
           <span class="pp-invoice-type-tag" :class="inv.invoiceType">{{ inv.invoiceType }}</span>
           <span class="pp-invoice-date">{{ inv.invoiceDate }}</span>
@@ -450,7 +513,7 @@
         <el-form :model="invoiceForm" label-width="70px" size="small">
           <el-row :gutter="12">
             <el-col :span="12">
-              <el-form-item label="金额(万)">
+              <el-form-item label="金额(元)">
                 <el-input-number v-model="invoiceForm.amount" :precision="2" :min="0" style="width:100%" />
               </el-form-item>
             </el-col>
@@ -464,10 +527,7 @@
             <el-col :span="12">
               <el-form-item label="类型">
                 <el-select v-model="invoiceForm.invoiceType" style="width:100%">
-                  <el-option label="预付款" value="预付款" />
-                  <el-option label="进度款" value="进度款" />
-                  <el-option label="验收款" value="验收款" />
-                  <el-option label="尾款" value="尾款" />
+                  <el-option v-for="opt in invoiceMilestoneOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
                 </el-select>
               </el-form-item>
             </el-col>
@@ -489,15 +549,38 @@
 
 <script>
 import { listProject, getProject, delProject, addProject, updateProject, getMilestones, addMilestone, delMilestone } from "@/api/system/project";
-import { listPersonAll } from "@/api/system/person";
+import { listPersonAllForProject } from "@/api/system/person";
 import { listIssueByProject } from "@/api/system/issue";
 import { listRiskByProject } from "@/api/system/risk";
 import { listInvoice, addInvoice, delInvoice } from "@/api/system/invoice";
+import {
+  PROJECT_STATUS,
+  PROJECT_STATUS_OPTIONS,
+  PROJECT_TYPE,
+  PROJECT_TYPE_OPTIONS,
+  SUBORDINATE,
+  MILESTONE_WARNING_DAYS,
+  MILESTONE_DISPLAY,
+  DEFAULT_MILESTONES,
+  INVOICE_TYPES_FOR_PROJECT,
+  STATUS_CLASS_MAP
+} from "@/utils/constants";
 
 export default {
   name: "Project",
   data() {
     return {
+      // 暴露常量给模板使用
+      projectStatus: PROJECT_STATUS,
+      projectStatusOptions: PROJECT_STATUS_OPTIONS,
+      projectType: PROJECT_TYPE,
+      projectTypeOptions: PROJECT_TYPE_OPTIONS,
+      subordinate: SUBORDINATE,
+      milestoneWarningDays: MILESTONE_WARNING_DAYS,
+      milestoneDisplay: MILESTONE_DISPLAY,
+      defaultMilestones: DEFAULT_MILESTONES,
+      statusClassMap: STATUS_CLASS_MAP,
+      // 原有数据
       loading: false,
       total: 0,
       projectList: [],
@@ -505,7 +588,7 @@ export default {
       queryParams: {
         pageNum: 1,
         pageSize: 10,
-        status: '',
+        status: PROJECT_STATUS.ONGOING,
         pmId: '',
         keyword: ''
       },
@@ -529,7 +612,8 @@ export default {
       invoiceOpen: false,
       invoiceProject: {},
       invoiceList: [],
-      invoiceForm: {}
+      invoiceForm: {},
+      invoiceMilestoneOptions: [] // 根据项目里程碑动态生成的开票类型选项
     };
   },
   computed: {
@@ -560,22 +644,26 @@ export default {
           // 解析里程碑
           const milestones = this.parseMilestones(row);
 
+          // 计算里程碑预警：已超期或10天内到期
+          const hasMilestoneAlert = milestones.some(m => m.dotClass === 'danger' || m.dotClass === 'warning');
+
           return {
             ...row,
             costUsage,
             hourUsage,
             milestones,
             invoices: row.invoices || [],
-            hasAlert: (row.issueCount > 0 || row.riskCount > 0)
+            hasAlert: (row.issueCount > 0 || row.riskCount > 0),
+            hasMilestoneAlert
           };
         });
         this.total = response.total || 0;
 
         // 计算状态统计
         this.statusCounts = {
-          ongoing: this.projectList.filter(p => p.status === '进行中').length,
-          completed: this.projectList.filter(p => p.status === '已完成').length,
-          paused: this.projectList.filter(p => p.status === '暂停').length
+          ongoing: this.projectList.filter(p => p.status === PROJECT_STATUS.ONGOING).length,
+          completed: this.projectList.filter(p => p.status === PROJECT_STATUS.COMPLETED).length,
+          paused: this.projectList.filter(p => p.status === PROJECT_STATUS.PAUSED).length
         };
 
         // 计算预警数量
@@ -585,17 +673,102 @@ export default {
       });
     },
     parseMilestones(row) {
-      // 默认里程碑配置
-      const defaultMilestones = [
-        { name: '需求', date: row.reqDate },
-        { name: 'UAT', date: row.uatDate },
-        { name: '上线', date: row.launchDate },
-        { name: '验收', date: row.acceptDate }
-      ];
-      return defaultMilestones;
+      // 非下辖项目没有里程碑
+      if (row.isSubordinate !== SUBORDINATE.YES) {
+        return [];
+      }
+
+      const today = new Date();
+      const warningDays = MILESTONE_WARNING_DAYS;
+
+      // 外包项目：使用自定义里程碑，如果没有则返回空数组
+      if (row.projectType === PROJECT_TYPE.OUTSOURCE) {
+        if (row.customMilestones && row.customMilestones.length > 0) {
+          return row.customMilestones.map(m => {
+            const plan = m.planDate ? new Date(m.planDate) : null;
+            const actual = m.actualDate ? new Date(m.actualDate) : null;
+            let statusClass = '';
+            let dotClass = 'pending';
+            let displayDate = MILESTONE_DISPLAY.PENDING;
+            const name = m.milestoneName || '里程碑';
+
+            if (plan) {
+              const diffDays = (plan - today) / (1000 * 60 * 60 * 24);
+              if (actual) {
+                if (actual > plan) {
+                  statusClass = 'danger';
+                  dotClass = 'danger';
+                } else {
+                  statusClass = 'completed';
+                  dotClass = 'completed';
+                }
+                displayDate = m.actualDate;
+              } else {
+                if (diffDays < 0) {
+                  statusClass = 'danger';
+                  dotClass = 'danger';
+                } else if (diffDays <= warningDays) {
+                  statusClass = 'warning';
+                  dotClass = 'warning';
+                } else {
+                  statusClass = '';
+                  dotClass = 'pending';
+                }
+                displayDate = m.planDate;
+              }
+            }
+            return { name, planDate: m.planDate, actualDate: m.actualDate, statusClass, dotClass, displayDate };
+          });
+        }
+        // 外包项目没有自定义里程碑时返回空数组
+        return [];
+      }
+
+      // 项目类型：使用默认里程碑
+      const milestones = DEFAULT_MILESTONES.map(m => ({
+        name: m.name,
+        planDate: row[m.planField],
+        actualDate: row[m.actualField]
+      }));
+      // 计算每个里程碑的状态和显示内容
+      return milestones.map(m => {
+        const plan = m.planDate ? new Date(m.planDate) : null;
+        const actual = m.actualDate ? new Date(m.actualDate) : null;
+        let statusClass = '';
+        let dotClass = 'pending';
+        let displayDate = MILESTONE_DISPLAY.PENDING;
+        if (plan) {
+          const diffDays = (plan - today) / (1000 * 60 * 60 * 24);
+          if (actual) {
+            // 已完成
+            if (actual > plan) {
+              statusClass = 'danger';  // 超期完成
+              dotClass = 'danger';
+            } else {
+              statusClass = 'completed';  // 按时完成
+              dotClass = 'completed';
+            }
+            displayDate = m.actualDate;
+          } else {
+            // 未完成
+            if (diffDays < 0) {
+              statusClass = 'danger';  // 已超期
+              dotClass = 'danger';
+            } else if (diffDays <= warningDays) {
+              statusClass = 'warning';  // 10天内到期
+              dotClass = 'warning';
+            } else {
+              statusClass = '';  // 未到时间（黑色）
+              dotClass = 'pending';
+            }
+            displayDate = m.planDate;
+          }
+        }
+        return { ...m, statusClass, dotClass, displayDate };
+      });
     },
     getPersonList() {
-      listPersonAll().then(response => {
+      listPersonAllForProject().then(response => {
         this.personOptions = response.data || [];
       });
     },
@@ -604,7 +777,7 @@ export default {
       this.getList();
     },
     resetQuery() {
-      this.queryParams = { pageNum: 1, pageSize: 10, status: '', pmId: '', keyword: '' };
+      this.queryParams = { pageNum: 1, pageSize: 10, status: PROJECT_STATUS.ONGOING, pmId: '', keyword: '' };
       this.handleQuery();
     },
     changePage(delta) {
@@ -624,19 +797,29 @@ export default {
       this.reset();
       getProject(row.id).then(response => {
         this.form = response.data;
+        // 如果是外包项目且没有自定义里程碑，初始化一个空项
+        if (this.form.projectType === PROJECT_TYPE.OUTSOURCE && (!this.form.customMilestones || this.form.customMilestones.length === 0)) {
+          this.form.customMilestones = [
+            { milestoneName: '', planDate: null, actualDate: null }
+          ];
+        }
         this.open = true;
         this.title = "修改项目";
       });
     },
     handleDetail(row) {
       getProject(row.id).then(response => {
-        this.detailData = response.data;
+        const data = response.data;
+        // 计算使用比例
+        data.costUsage = data.cost > 0 ? Math.round((data.costUsed || 0) * 100 / data.cost) : 0;
+        data.hourUsage = data.workHours > 0 ? Math.round((data.workHoursUsed || 0) * 100 / data.workHours) : 0;
+        this.detailData = data;
         this.detailOpen = true;
         this.activeTab = 'milestone';
         this.loadMilestones(row.id);
         this.loadProjectIssues(row.id);
         this.loadProjectRisks(row.id);
-        this.detailMilestones = this.parseMilestones(response.data);
+        this.detailMilestones = this.parseMilestones(data);
       });
     },
     loadMilestones(projectId) {
@@ -659,9 +842,8 @@ export default {
         id: undefined,
         name: undefined,
         customer: undefined,
-        pmId: undefined,
+        projectType: PROJECT_TYPE.PROJECT,
         pmName: undefined,
-        salesId: undefined,
         salesName: undefined,
         cost: undefined,
         costUsed: undefined,
@@ -669,26 +851,60 @@ export default {
         workHoursUsed: undefined,
         progress: 0,
         stage: undefined,
-        status: "进行中",
+        status: PROJECT_STATUS.ONGOING,
+        isSubordinate: SUBORDINATE.YES,
         startDate: undefined,
         endDate: undefined,
+        reqPlanDate: undefined,
+        reqActualDate: undefined,
+        uatPlanDate: undefined,
+        uatActualDate: undefined,
+        launchPlanDate: undefined,
+        launchActualDate: undefined,
+        acceptPlanDate: undefined,
+        acceptActualDate: undefined,
         actualEndDate: undefined,
         contractAmount: undefined,
+        participants: [],
+        customMilestones: [],
         remark: undefined
       };
       this.resetForm("form");
     },
+    handleProjectTypeChange(val) {
+      if (val === PROJECT_TYPE.OUTSOURCE) {
+        // 切换为外包类型时，初始化自定义里程碑列表
+        if (!this.form.customMilestones || this.form.customMilestones.length === 0) {
+          this.form.customMilestones = [
+            { milestoneName: '', planDate: null, actualDate: null }
+          ];
+        }
+        // 清空默认里程碑
+        this.form.reqPlanDate = null;
+        this.form.reqActualDate = null;
+        this.form.uatPlanDate = null;
+        this.form.uatActualDate = null;
+        this.form.launchPlanDate = null;
+        this.form.launchActualDate = null;
+        this.form.acceptPlanDate = null;
+        this.form.acceptActualDate = null;
+      } else {
+        // 切换为项目类型时，清空自定义里程碑
+        this.form.customMilestones = [];
+      }
+    },
+    addCustomMilestone() {
+      if (!this.form.customMilestones) {
+        this.form.customMilestones = [];
+      }
+      this.form.customMilestones.push({ milestoneName: '', planDate: null, actualDate: null });
+    },
+    removeCustomMilestone(index) {
+      this.form.customMilestones.splice(index, 1);
+    },
     cancel() {
       this.open = false;
       this.reset();
-    },
-    handlePmChange(val) {
-      const person = this.personOptions.find(p => p.id === val);
-      this.form.pmName = person ? person.name : '';
-    },
-    handleSalesChange(val) {
-      const person = this.personOptions.find(p => p.id === val);
-      this.form.salesName = person ? person.name : '';
     },
     submitForm() {
       this.$refs["form"].validate(valid => {
@@ -745,16 +961,42 @@ export default {
     },
     addInvoice(row) {
       this.invoiceProject = row;
+      // 根据项目类型和里程碑生成开票类型选项
+      this.invoiceMilestoneOptions = this.generateInvoiceOptions(row);
       this.invoiceForm = {
         projectId: row.id,
         amount: undefined,
         percent: undefined,
-        invoiceType: '进度款',
+        invoiceType: this.invoiceMilestoneOptions.length > 0 ? this.invoiceMilestoneOptions[0].value : '',
         invoiceDate: undefined,
         remark: undefined
       };
       this.loadInvoices(row.id);
       this.invoiceOpen = true;
+    },
+    generateInvoiceOptions(row) {
+      const options = [];
+      // 首款始终是第一个选项
+      options.push({ label: '首款', value: '首款' });
+
+      if (row.projectType === PROJECT_TYPE.OUTSOURCE && row.customMilestones && row.customMilestones.length > 0) {
+        // 外包项目：根据自定义里程碑生成选项
+        row.customMilestones.forEach(m => {
+          if (m.milestoneName) {
+            options.push({ label: m.milestoneName + '款', value: m.milestoneName + '款' });
+          }
+        });
+      } else if (row.projectType === PROJECT_TYPE.PROJECT || !row.projectType) {
+        // 项目类型：使用默认里程碑开票选项
+        INVOICE_TYPES_FOR_PROJECT.slice(1, -1).forEach(opt => {
+          if (opt.value !== '首款' && opt.value !== '尾款') {
+            options.push(opt);
+          }
+        });
+      }
+      // 尾款始终是最后一个选项
+      options.push({ label: '尾款', value: '尾款' });
+      return options;
     },
     loadInvoices(projectId) {
       listInvoice(projectId).then(response => {
@@ -772,7 +1014,7 @@ export default {
           projectId: this.invoiceProject.id,
           amount: undefined,
           percent: undefined,
-          invoiceType: '进度款',
+          invoiceType: this.invoiceMilestoneOptions.length > 0 ? this.invoiceMilestoneOptions[0].value : '',
           invoiceDate: undefined,
           remark: undefined
         };
@@ -795,10 +1037,10 @@ export default {
       this.$router.push(path);
     },
     goToIssues(row) {
-      this.$router.push({ path: '/system/issue', query: { projectId: row.id || row.projectId } });
+      this.$router.push({ path: '/issue', query: { projectId: row.id || row.projectId } });
     },
     goToRisks(row) {
-      this.$router.push({ path: '/system/risk', query: { projectId: row.id || row.projectId } });
+      this.$router.push({ path: '/risk', query: { projectId: row.id || row.projectId } });
     },
     // 样式辅助方法
     getUsageClass(value) {
@@ -807,24 +1049,19 @@ export default {
       return 'normal';
     },
     statusClass(status) {
-      const map = { '进行中': 'ongoing', '已完成': 'completed', '暂停': 'paused' };
-      return map[status] || '';
+      return STATUS_CLASS_MAP.projectStatus[status] || '';
     },
     severityClass(severity) {
-      const map = { '高': 'danger', '中': 'warning', '低': 'success' };
-      return map[severity] || '';
+      return STATUS_CLASS_MAP.severity[severity] || '';
     },
     levelClass(level) {
-      const map = { '高': 'danger', '中': 'warning', '低': 'success' };
-      return map[level] || '';
+      return STATUS_CLASS_MAP.riskLevel[level] || '';
     },
     issueStatusClass(status) {
-      const map = { '待处理': 'danger', '进行中': 'warning', '已解决': 'success', '已关闭': 'info' };
-      return map[status] || '';
+      return STATUS_CLASS_MAP.issueStatus[status] || '';
     },
     riskStatusClass(status) {
-      const map = { '潜在': 'warning', '已发生': 'danger', '已消除': 'success' };
-      return map[status] || '';
+      return STATUS_CLASS_MAP.riskStatus[status] || '';
     },
     getMilestoneClass(m) {
       if (!m.date) return '';
@@ -833,7 +1070,7 @@ export default {
       const diff = (date - today) / (1000 * 60 * 60 * 24);
       if (m.status === 'completed') return 'completed';
       if (diff < 0) return 'danger';
-      if (diff <= 7) return 'warning';
+      if (diff <= MILESTONE_WARNING_DAYS) return 'warning';
       return '';
     },
     getMilestoneDotClass(m) {
@@ -844,17 +1081,20 @@ export default {
       return 'pending';
     },
     getMilestoneCardClass(m) {
-      const cls = this.getMilestoneClass(m);
-      if (cls === 'danger') return 'danger';
-      if (cls === 'warning') return 'warning';
+      // parseMilestones 返回的对象有 statusClass 字段
+      if (m.statusClass === 'danger') return 'danger';
+      if (m.statusClass === 'warning') return 'warning';
       return '';
     },
     getMilestoneStatus(m) {
-      if (m.status === 'completed') return '已完成';
-      const dateClass = this.getMilestoneClass(m);
-      if (dateClass === 'danger') return '已超期';
-      if (dateClass === 'warning') return '一周内到期';
-      return '待进行';
+      // parseMilestones 返回的对象有 statusClass 和 dotClass 字段
+      if (m.statusClass === 'completed') return MILESTONE_DISPLAY.COMPLETED;
+      if (m.statusClass === 'danger') return MILESTONE_DISPLAY.OVERDUE;
+      if (m.statusClass === 'warning') return MILESTONE_DISPLAY.WARNING;
+      // 有计划日期但未完成
+      if (m.planDate && !m.actualDate) return MILESTONE_DISPLAY.WAITING;
+      // 没有计划日期
+      return MILESTONE_DISPLAY.PENDING;
     }
   }
 };
@@ -994,23 +1234,55 @@ export default {
 .pp-project-name-cell {
   display: flex;
   align-items: center;
-  gap: 8px;
+}
+
+.pp-project-name-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 4px;
 }
 
 .pp-project-link {
   color: #2563EB;
   cursor: pointer;
   font-weight: 500;
+  flex: 1;
 
   &:hover { text-decoration: underline; }
   &.danger { color: #EF4444; }
+}
+
+.pp-project-name-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.pp-outsource-tag {
+  position: absolute;
+  top: -6px;
+  right: -14px;
+  font-size: 9px;
+  font-weight: 600;
+  color: #F97316;
+  background: #FFF7ED;
+  border: 1px solid #FDBA74;
+  border-radius: 3px;
+  padding: 1px 3px;
+  line-height: 1;
+}
+
+.pp-alert-badges {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
 }
 
 .pp-alert-badge {
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  padding: 2px 6px;
+  padding: 2px 5px;
   border-radius: 10px;
   font-size: 10px;
   font-weight: 500;
@@ -1052,15 +1324,19 @@ export default {
 
 .pp-usage-bar {
   flex: 1;
-  height: 4px;
-  background: #F3F4F6;
-  border-radius: 2px;
+  min-width: 60px;
+  height: 10px;
+  background: #E5E7EB;
+  border-radius: 4px;
   overflow: hidden;
+  border: 1px solid #D1D5DB;
 }
 
 .pp-usage-fill {
   height: 100%;
-  border-radius: 2px;
+  border-radius: 3px;
+  min-width: 8px;
+  transition: width 0.3s ease;
 
   &.normal { background: #10B981; }
   &.warning { background: #F59E0B; }
@@ -1155,7 +1431,7 @@ export default {
   font-size: 10px;
   text-align: center;
 
-  &.预付款 { background: #eff6ff; color: #2563EB; }
+  &.首款 { background: #eff6ff; color: #2563EB; }
   &.进度款 { background: #f0fdf4; color: #10B981; }
   &.验收款 { background: #fffbeb; color: #F59E0B; }
   &.尾款 { background: #f5f3ff; color: #6366F1; }
@@ -1638,7 +1914,7 @@ export default {
   min-width: 60px;
   text-align: center;
 
-  &.预付款 { background: #eff6ff; color: #2563EB; }
+  &.首款 { background: #eff6ff; color: #2563EB; }
   &.进度款 { background: #f0fdf4; color: #10B981; }
   &.验收款 { background: #fffbeb; color: #F59E0B; }
   &.尾款 { background: #f5f3ff; color: #6366F1; }
@@ -1670,7 +1946,138 @@ export default {
 .pp-invoice-add-title {
   font-size: 13px;
   font-weight: 500;
+  color: #373151;
+  margin-bottom: 12px;
+}
+
+/* 里程碑表单区域 */
+.pp-milestone-form-section {
+  background: #F9FAFB;
+  border: 1px solid #E5E7EB;
+  border-radius: 6px;
+  padding: 12px 16px 0;
+  margin-bottom: 16px;
+}
+
+.pp-milestone-form-title {
+  font-size: 13px;
+  font-weight: 500;
   color: #374151;
   margin-bottom: 12px;
+}
+
+/* 里程碑行样式 */
+.pp-milestone-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.pp-milestone-label {
+  font-size: 13px;
+  color: #374151;
+  font-weight: 500;
+  min-width: 70px;
+}
+
+.pp-milestone-dates {
+  display: flex;
+  gap: 12px;
+  flex: 1;
+}
+
+.pp-milestone-dates .el-date-editor {
+  width: calc(50% - 6px);
+}
+
+/* 列表里程碑日期颜色 */
+.pp-milestone-date.completed {
+  color: #10B981;
+}
+
+.pp-milestone-date.danger {
+  color: #EF4444;
+  font-weight: 500;
+}
+
+/* 里程碑组样式 */
+.pp-milestone-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.pp-milestone-group-label {
+  font-size: 13px;
+  color: #374151;
+  font-weight: 500;
+  min-width: 60px;
+}
+
+/* 自定义里程碑列表 */
+.pp-custom-milestone-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pp-custom-milestone-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pp-remove-milestone-btn {
+  padding: 4px 8px;
+  font-size: 12px;
+  color: #EF4444;
+  background: white;
+  border: 1px solid #EF4444;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover {
+    background: #FEF2F2;
+  }
+}
+
+.pp-add-milestone-btn {
+  padding: 6px 12px;
+  font-size: 12px;
+  color: #2563EB;
+  background: white;
+  border: 1px solid #2563EB;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-top: 8px;
+
+  &:hover {
+    background: #EFF6FF;
+  }
+}
+
+/* 里程碑行项目样式 - 每个里程碑一行 */
+.pp-milestone-row-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.pp-milestone-row-label {
+  font-size: 13px;
+  color: #374151;
+  min-width: 60px;
+}
+
+.pp-milestone-picker {
+  width: 150px;
+}
+
+.pp-milestone-name-input {
+  width: 120px;
 }
 </style>

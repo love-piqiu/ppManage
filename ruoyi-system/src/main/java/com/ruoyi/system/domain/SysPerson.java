@@ -1,6 +1,7 @@
 package com.ruoyi.system.domain;
 
 import java.util.Date;
+import java.util.List;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.ZoneId;
@@ -81,8 +82,35 @@ public class SysPerson extends BaseEntity
     @Excel(name = "状态")
     private String status;
 
+    /** 资源状态 */
+    @Excel(name = "资源状态")
+    private String resourceStatus;
+
+    /** 资源状态说明 */
+    @Excel(name = "资源状态说明")
+    private String resourceStatusRemark;
+
+    /** 下一个预计参与项目 */
+    @Excel(name = "下一个项目")
+    private String nextProject;
+
+    /** 预计释放日期 */
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    @Excel(name = "预计释放日期", width = 30, dateFormat = "yyyy-MM-dd")
+    private Date expectedReleaseDate;
+
+    /** 是否直属下级 */
+    @Excel(name = "是否直属下级")
+    private String isDirect;
+
+    /** 头像路径 */
+    private String avatar;
+
     /** 删除标志 */
     private String delFlag;
+
+    /** 在建项目列表 */
+    private List<String> projects;
 
     public Long getId()
     {
@@ -254,6 +282,66 @@ public class SysPerson extends BaseEntity
         this.status = status;
     }
 
+    public String getResourceStatus()
+    {
+        return resourceStatus;
+    }
+
+    public void setResourceStatus(String resourceStatus)
+    {
+        this.resourceStatus = resourceStatus;
+    }
+
+    public String getResourceStatusRemark()
+    {
+        return resourceStatusRemark;
+    }
+
+    public void setResourceStatusRemark(String resourceStatusRemark)
+    {
+        this.resourceStatusRemark = resourceStatusRemark;
+    }
+
+    public String getNextProject()
+    {
+        return nextProject;
+    }
+
+    public void setNextProject(String nextProject)
+    {
+        this.nextProject = nextProject;
+    }
+
+    public Date getExpectedReleaseDate()
+    {
+        return expectedReleaseDate;
+    }
+
+    public void setExpectedReleaseDate(Date expectedReleaseDate)
+    {
+        this.expectedReleaseDate = expectedReleaseDate;
+    }
+
+    public String getIsDirect()
+    {
+        return isDirect;
+    }
+
+    public void setIsDirect(String isDirect)
+    {
+        this.isDirect = isDirect;
+    }
+
+    public String getAvatar()
+    {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar)
+    {
+        this.avatar = avatar;
+    }
+
     public String getDelFlag()
     {
         return delFlag;
@@ -262,5 +350,15 @@ public class SysPerson extends BaseEntity
     public void setDelFlag(String delFlag)
     {
         this.delFlag = delFlag;
+    }
+
+    public List<String> getProjects()
+    {
+        return projects;
+    }
+
+    public void setProjects(List<String> projects)
+    {
+        this.projects = projects;
     }
 }

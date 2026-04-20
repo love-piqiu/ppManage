@@ -20,6 +20,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="hometown"       column="hometown"        />
         <result property="entryDate"      column="entry_date"      />
         <result property="status"         column="status"          />
+        <result property="resourceStatus"      column="resource_status"      />
+        <result property="resourceStatusRemark" column="resource_status_remark" />
+        <result property="nextProject"         column="next_project"         />
+        <result property="expectedReleaseDate" column="expected_release_date" />
+        <result property="isDirect"        column="is_direct"        />
+        <result property="avatar"         column="avatar"          />
         <result property="delFlag"        column="del_flag"        />
         <result property="createBy"       column="create_by"       />
         <result property="createTime"     column="create_time"     />
@@ -31,6 +37,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <sql id="selectPersonVo">
         select id, name, position, level, contact, email, birth_date, age, work_years, company_years,
                education, school, hometown, entry_date, status, del_flag,
+               resource_status, resource_status_remark, next_project, expected_release_date, is_direct, avatar,
                create_by, create_time, update_by, update_time, remark
         from sys_person
     </sql>
@@ -59,6 +66,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </select>
 
     <select id="selectPersonAll" resultMap="SysPersonResult">
+        <include refid="selectPersonVo"/>
+        where del_flag = '0' and status = '在职' and is_direct = '1'
+        order by name
+    </select>
+
+    <select id="selectPersonAllForProject" resultMap="SysPersonResult">
         <include refid="selectPersonVo"/>
         where del_flag = '0' and status = '在职'
         order by name
@@ -103,6 +116,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="hometown != null and hometown != ''">hometown,</if>
             <if test="entryDate != null">entry_date,</if>
             <if test="status != null and status != ''">status,</if>
+            <if test="resourceStatus != null and resourceStatus != ''">resource_status,</if>
+            <if test="resourceStatusRemark != null and resourceStatusRemark != ''">resource_status_remark,</if>
+            <if test="nextProject != null and nextProject != ''">next_project,</if>
+            <if test="expectedReleaseDate != null">expected_release_date,</if>
+            <if test="isDirect != null and isDirect != ''">is_direct,</if>
+            <if test="avatar != null and avatar != ''">avatar,</if>
             <if test="remark != null and remark != ''">remark,</if>
             <if test="createBy != null and createBy != ''">create_by,</if>
             create_time
@@ -121,6 +140,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="hometown != null and hometown != ''">#{hometown},</if>
             <if test="entryDate != null">#{entryDate},</if>
             <if test="status != null and status != ''">#{status},</if>
+            <if test="resourceStatus != null and resourceStatus != ''">#{resourceStatus},</if>
+            <if test="resourceStatusRemark != null and resourceStatusRemark != ''">#{resourceStatusRemark},</if>
+            <if test="nextProject != null and nextProject != ''">#{nextProject},</if>
+            <if test="expectedReleaseDate != null">#{expectedReleaseDate},</if>
+            <if test="isDirect != null and isDirect != ''">#{isDirect},</if>
+            <if test="avatar != null and avatar != ''">#{avatar},</if>
             <if test="remark != null and remark != ''">#{remark},</if>
             <if test="createBy != null and createBy != ''">#{createBy},</if>
             sysdate()
@@ -144,6 +169,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="hometown != null">hometown = #{hometown},</if>
             <if test="entryDate != null">entry_date = #{entryDate},</if>
             <if test="status != null and status != ''">status = #{status},</if>
+            <if test="resourceStatus != null and resourceStatus != ''">resource_status = #{resourceStatus},</if>
+            <if test="resourceStatusRemark != null">resource_status_remark = #{resourceStatusRemark},</if>
+            <if test="nextProject != null and nextProject != ''">next_project = #{nextProject},</if>
+            <if test="expectedReleaseDate != null">expected_release_date = #{expectedReleaseDate},</if>
+            <if test="isDirect != null and isDirect != ''">is_direct = #{isDirect},</if>
+            <if test="avatar != null and avatar != ''">avatar = #{avatar},</if>
             <if test="remark != null">remark = #{remark},</if>
             <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
             update_time = sysdate()

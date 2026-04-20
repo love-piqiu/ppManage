@@ -31,7 +31,7 @@ INSERT INTO sys_menu (menu_id, menu_name, parent_id, order_num, path, component,
 
 -- 4. 风险管理
 INSERT INTO sys_menu (menu_id, menu_name, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, remark)
-VALUES (2020, '风险管理', 0, 4, 'risk', 'system/risk/index', 1, 0, 'C', '0', '0', 'system:risk:list', 'chart', 'admin', NOW(), '风险管理菜单');
+VALUES (2020, '风险管理', 0, 4, 'risk', 'system/risk/index', 1, 0, 'C', '0', '0', 'system:risk:list', 'bolt', 'admin', NOW(), '风险管理菜单');
 
 INSERT INTO sys_menu (menu_id, menu_name, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time) VALUES
 (2021, '风险查询', 2020, 1, '', '', 1, 0, 'F', '0', '0', 'system:risk:query', '#', 'admin', NOW()),
@@ -69,6 +69,14 @@ INSERT INTO sys_menu (menu_id, menu_name, parent_id, order_num, path, component,
 (2051, '周报查看', 2050, 1, '', '', 1, 0, 'F', '0', '0', 'report:weekly:view', '#', 'admin', NOW()),
 (2052, '周报发送', 2050, 2, '', '', 1, 0, 'F', '0', '0', 'report:weekly:send', '#', 'admin', NOW());
 
--- 8. 邮件配置 (放在系统管理下，parent_id=1 是系统管理)
+-- 8. 邮件配置已移至周报管理中，不再单独作为菜单
+
+-- 9. 资源管理
 INSERT INTO sys_menu (menu_id, menu_name, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, remark)
-VALUES (2060, '邮件配置', 1, 99, 'email', 'system/email/index', 1, 0, 'C', '0', '0', 'system:email:edit', 'email', 'admin', NOW(), '邮件配置菜单');
+VALUES (2060, '资源管理', 0, 8, 'resource', 'system/resource/index', 1, 0, 'C', '0', '0', 'system:resource:list', 'skill', 'admin', NOW(), '资源管理菜单');
+
+INSERT INTO sys_menu (menu_id, menu_name, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time) VALUES
+(2061, '资源查询', 2060, 1, '', '', 1, 0, 'F', '0', '0', 'system:resource:query', '#', 'admin', NOW()),
+(2062, '技能添加', 2060, 2, '', '', 1, 0, 'F', '0', '0', 'system:resource:edit', '#', 'admin', NOW()),
+(2063, '技能删除', 2060, 3, '', '', 1, 0, 'F', '0', '0', 'system:resource:edit', '#', 'admin', NOW()),
+(2064, '数据导出', 2060, 4, '', '', 1, 0, 'F', '0', '0', 'system:resource:export', '#', 'admin', NOW());

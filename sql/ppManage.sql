@@ -211,8 +211,8 @@ CREATE TABLE sys_email_config (
 -- ----------------------------
 -- 初始化邮件配置数据
 -- ----------------------------
-INSERT INTO sys_email_config (id, host, port, username, password, recipient_email, sender_name, enabled)
-VALUES (1, 'smtp.qq.com', 465, 'sender@qq.com', 'your_auth_code', 'manager@company.com', '项目管理系统', 0);
+INSERT INTO sys_email_config (id, host, port, username, password, recipient_email, sender_name, email_subject, send_day, send_time, enabled)
+VALUES (1, 'smtp.qq.com', 465, 'sender@qq.com', 'your_auth_code', 'manager@company.com', '项目管理系统', '项目周报 - {日期}', '周五', '17:00:00', 0);
 
 -- ----------------------------
 -- 初始化示例人员数据
@@ -242,3 +242,50 @@ INSERT INTO sys_task (id, name, type, cycle, deadline_time, status) VALUES
 (2, '每日风险检查', '周期性', '每日', '09:00:00', '启用'),
 (3, '每周进度汇总', '周期性', '每周', '17:00:00', '启用'),
 (4, '每月成本核算', '周期性', '每月', '12:00:00', '启用');
+
+-- ----------------------------
+-- 10、人员技能表
+-- ----------------------------
+DROP TABLE IF EXISTS sys_person_skill;
+CREATE TABLE sys_person_skill (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '技能记录ID',
+  person_id BIGINT NOT NULL COMMENT '人员ID',
+  category VARCHAR(50) NOT NULL COMMENT '技能大类(后端/前端/ETL/数据分析/运维/测试)',
+  skill VARCHAR(100) NOT NULL COMMENT '具体技能(Java/Python/React/Vue)',
+  source VARCHAR(50) DEFAULT 'self' COMMENT '来源(self录入/pm观察)',
+  remark VARCHAR(500) COMMENT '备注',
+  create_by VARCHAR(64) DEFAULT '' COMMENT '创建者',
+  create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  del_flag CHAR(1) DEFAULT '0' COMMENT '删除标志（0代表存在 2代表删除）',
+  INDEX idx_person_id (person_id),
+  INDEX idx_category (category),
+  INDEX idx_skill (skill)
+) ENGINE=InnoDB AUTO_INCREMENT=100 COMMENT = '人员技能表';
+
+-- ----------------------------
+-- 11、技能分类字典表
+-- ----------------------------
+DROP TABLE IF EXISTS sys_skill_category;
+CREATE TABLE sys_skill_category (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '分类ID',
+  category VARCHAR(50) NOT NULL COMMENT '技能大类',
+  skills TEXT NOT NULL COMMENT '该大类下的具体技能列表(JSON数组)',
+  sort_order INT DEFAULT 0 COMMENT '排序',
+  status CHAR(1) DEFAULT '0' COMMENT '状态(0正常 1禁用)',
+  create_by VARCHAR(64) DEFAULT '' COMMENT '创建者',
+  create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  update_by VARCHAR(64) DEFAULT '' COMMENT '更新者',
+  update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  del_flag CHAR(1) DEFAULT '0' COMMENT '删除标志（0代表存在 2代表删除）'
+) ENGINE=InnoDB AUTO_INCREMENT=100 COMMENT = '技能分类字典表';
+
+-- ----------------------------
+-- 初始化技能分类数据
+-- ----------------------------
+INSERT INTO sys_skill_category (id, category, skills, sort_order, status) VALUES
+(1, '后端', '["Java","Python","Go","C#","PHP","Node.js","Spring Boot","Django"]', 1, '0'),
+(2, '前端', '["Vue","React","Angular","JavaScript","TypeScript","HTML/CSS","小程序","Electron"]', 2, '0'),
+(3, 'ETL', '["DataX","Kettle","Informatica","SSIS","Sqoop","Spark SQL","Flink","Python ETL"]', 3, '0'),
+(4, '数据分析', '["SQL","Excel","Python数据分析","R","Tableau","Power BI","FineBI","Superset"]', 4, '0'),
+(5, '运维', '["Linux","Docker","Kubernetes","Nginx","Jenkins","Git","Shell","Ansible"]', 5, '0'),
+(6, '测试', '["Selenium","JMeter","Postman","pytest","JUnit","接口测试","性能测试","自动化测试"]', 6, '0');

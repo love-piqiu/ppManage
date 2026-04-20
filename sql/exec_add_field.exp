@@ -1,0 +1,10 @@
+#!/usr/bin/expect -f
+set timeout 30
+spawn sudo mysql ppmmanage
+expect "password"
+send "Lh@123456\r"
+expect "mysql>"
+send "ALTER TABLE sys_person ADD COLUMN expected_release_date DATE DEFAULT NULL;\r"
+expect "Query OK"
+send "exit\r"
+expect eof

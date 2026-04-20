@@ -18,7 +18,15 @@
       <div class="pp-filter-group">
         <span class="pp-filter-label">所属项目</span>
         <el-select v-model="queryParams.projectId" placeholder="全部项目" clearable filterable size="small" class="pp-filter-select" @change="handleQuery">
-          <el-option v-for="item in projectOptions" :key="item.id" :label="item.name" :value="item.id" />
+          <el-option v-for="item in projectOptions" :key="item.id" :label="item.customer + '-' + item.name" :value="item.id" />
+        </el-select>
+      </div>
+      <div class="pp-filter-group">
+        <span class="pp-filter-label">风险类别</span>
+        <el-select v-model="queryParams.category" placeholder="全部类别" clearable size="small" class="pp-filter-select" @change="handleQuery">
+          <el-option label="进度风险" value="进度风险" />
+          <el-option label="质量风险" value="质量风险" />
+          <el-option label="成本风险" value="成本风险" />
         </el-select>
       </div>
       <div class="pp-filter-group">
@@ -72,9 +80,9 @@
         <tr>
           <th style="min-width: 100px;">所属项目</th>
           <th style="min-width: 200px;">风险描述</th>
+          <th>风险类别</th>
           <th>风险等级</th>
           <th>状态</th>
-          <th style="min-width: 150px;">应对措施</th>
           <th>负责人</th>
           <th>更新时间</th>
           <th style="min-width: 80px;">操作</th>
@@ -83,19 +91,19 @@
       <tbody>
         <tr v-for="(row, index) in riskList" :key="index" :class="{ resolved: row.status === '已消除' }">
           <td>
-            <a class="pp-project-link" @click="goToProject(row)">{{ row.projectName || '-' }}</a>
+            <a class="pp-project-link" @click="goToProject(row)">{{ row.customer }}-{{ row.projectName || '-' }}</a>
           </td>
           <td>
             <div class="pp-risk-desc" @click="handleDetail(row)">{{ row.description }}</div>
+          </td>
+          <td>
+            <span class="pp-category-tag" :class="categoryClass(row.category)">{{ row.category || '-' }}</span>
           </td>
           <td>
             <span class="pp-level-tag" :class="levelClass(row.level)">{{ levelEmoji(row.level) }} {{ row.level }}</span>
           </td>
           <td>
             <span class="pp-status-tag" :class="riskStatusClass(row.status)">{{ row.status }}</span>
-          </td>
-          <td>
-            <div class="pp-measure-cell" :title="row.measure">{{ row.measure || '-' }}</div>
           </td>
           <td>{{ row.ownerName || '-' }}</td>
           <td>{{ row.updateTime || '-' }}</td>
@@ -126,13 +134,22 @@
       <el-form ref="form" :model="form" :rules="rules" label-width="100px">
         <el-form-item label="项目" prop="projectId">
           <el-select v-model="form.projectId" placeholder="请选择项目" filterable @change="handleProjectChange">
-            <el-option v-for="item in projectOptions" :key="item.id" :label="item.name" :value="item.id" />
+            <el-option v-for="item in projectOptions" :key="item.id" :label="item.customer + '-' + item.name" :value="item.id" />
           </el-select>
         </el-form-item>
         <el-form-item label="风险描述" prop="description">
           <el-input v-model="form.description" type="textarea" :rows="3" placeholder="请输入风险描述" />
         </el-form-item>
         <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="风险类别" prop="category">
+              <el-select v-model="form.category" placeholder="请选择风险类别">
+                <el-option label="进度风险" value="进度风险" />
+                <el-option label="质量风险" value="质量风险" />
+                <el-option label="成本风险" value="成本风险" />
+              </el-select>
+            </el-form-item>
+          </el-col>
           <el-col :span="12">
             <el-form-item label="风险等级" prop="level">
               <el-select v-model="form.level" placeholder="请选择风险等级">
@@ -142,6 +159,8 @@
               </el-select>
             </el-form-item>
           </el-col>
+        </el-row>
+        <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="状态" prop="status">
               <el-select v-model="form.status" placeholder="请选择状态">
@@ -151,12 +170,14 @@
               </el-select>
             </el-form-item>
           </el-col>
+          <el-col :span="12">
+            <el-form-item label="负责人" prop="ownerId">
+              <el-select v-model="form.ownerId" placeholder="请选择负责人" filterable @change="handleOwnerChange">
+                <el-option v-for="item in personOptions" :key="item.id" :label="item.name" :value="item.id" />
+              </el-select>
+            </el-form-item>
+          </el-col>
         </el-row>
-        <el-form-item label="负责人" prop="ownerId">
-          <el-select v-model="form.ownerId" placeholder="请选择负责人" filterable @change="handleOwnerChange">
-            <el-option v-for="item in personOptions" :key="item.id" :label="item.name" :value="item.id" />
-          </el-select>
-        </el-form-item>
         <el-form-item label="应对措施" prop="measure">
           <el-input v-model="form.measure" type="textarea" :rows="3" placeholder="请输入应对措施" />
         </el-form-item>
@@ -183,6 +204,10 @@
         <!-- 信息网格 -->
         <div class="pp-info-grid">
           <div class="pp-info-item">
+            <div class="pp-info-label">风险类别</div>
+            <div class="pp-info-value"><span class="pp-category-tag" :class="categoryClass(detailData.category)">{{ detailData.category || '-' }}</span></div>
+          </div>
+          <div class="pp-info-item">
             <div class="pp-info-label">风险等级</div>
             <div class="pp-info-value"><span class="pp-level-tag" :class="levelClass(detailData.level)">{{ levelEmoji(detailData.level) }} {{ detailData.level }}</span></div>
           </div>
@@ -201,10 +226,6 @@
           <div class="pp-info-item">
             <div class="pp-info-label">更新时间</div>
             <div class="pp-info-value">{{ detailData.updateTime || '-' }}</div>
-          </div>
-          <div class="pp-info-item">
-            <div class="pp-info-label">创建人</div>
-            <div class="pp-info-value">{{ detailData.creatorName || '-' }}</div>
           </div>
         </div>
       </div>
@@ -279,7 +300,7 @@ export default {
       riskList: [],
       projectOptions: [],
       personOptions: [],
-      queryParams: { pageNum: 1, pageSize: 10, projectId: undefined, level: undefined, status: undefined, keyword: undefined },
+      queryParams: { pageNum: 1, pageSize: 10, projectId: undefined, category: undefined, level: undefined, status: undefined, keyword: undefined },
       title: "",
       open: false,
       detailOpen: false,
@@ -329,10 +350,10 @@ export default {
     getProjectList() { listProjectAll().then(response => { this.projectOptions = response.data || []; }); },
     getPersonList() { listPersonAll().then(response => { this.personOptions = response.data || []; }); },
     handleQuery() { this.queryParams.pageNum = 1; this.getList(); },
-    resetQuery() { this.queryParams = { pageNum: 1, pageSize: 10, projectId: undefined, level: undefined, status: undefined, keyword: undefined }; this.getList(); },
+    resetQuery() { this.queryParams = { pageNum: 1, pageSize: 10, projectId: undefined, category: undefined, level: undefined, status: undefined, keyword: undefined }; this.getList(); },
     changePage(delta) { this.queryParams.pageNum += delta; this.getList(); },
     goToPage(page) { this.queryParams.pageNum = page; this.getList(); },
-    reset() { this.form = { id: undefined, projectId: undefined, projectName: undefined, description: undefined, level: "中", status: "潜在", ownerId: undefined, ownerName: undefined, measure: undefined }; this.resetForm("form"); },
+    reset() { this.form = { id: undefined, projectId: undefined, projectName: undefined, description: undefined, category: "进度风险", level: "中", status: "潜在", ownerId: undefined, ownerName: undefined, measure: undefined }; this.resetForm("form"); },
     cancel() { this.open = false; this.reset(); },
     handleAdd() { this.reset(); this.open = true; this.title = "添加风险"; },
     handleUpdate(row) { this.reset(); getRisk(row.id).then(response => { this.form = response.data; this.open = true; this.title = "修改风险"; }); },
@@ -396,6 +417,7 @@ export default {
       this.newHistoryStatus = '';
     },
     levelClass(level) { const map = { '高': 'high', '中': 'medium', '低': 'low' }; return map[level] || ''; },
+    categoryClass(category) { const map = { '进度风险': 'schedule', '质量风险': 'quality', '成本风险': 'cost' }; return map[category] || ''; },
     riskStatusClass(status) { const map = { '潜在': 'potential', '已发生': 'occurred', '已消除': 'resolved' }; return map[status] || ''; }
   }
 };
@@ -436,6 +458,8 @@ export default {
 
 /* 等级标签 */
 .pp-level-tag { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: 500; &.high { background: #fef2f2; color: #EF4444; } &.medium { background: #fffbeb; color: #F59E0B; } &.low { background: #eff6ff; color: #2563EB; } }
+/* 风险类别标签 */
+.pp-category-tag { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: 500; &.schedule { background: #fef2f2; color: #DC2626; } &.quality { background: #fffbeb; color: #B45309; } &.cost { background: #eff6ff; color: #1D4ED8; } }
 /* 风险状态标签 */
 .pp-status-tag.potential { background: #fffbeb; color: #F59E0B; }
 .pp-status-tag.occurred { background: #fef2f2; color: #EF4444; }

@@ -39,6 +39,15 @@ public class SysTask extends BaseEntity
     /** 截止星期(如周五) */
     private String deadlineWeekday;
 
+    /** 一次性任务截止日期 */
+    private java.util.Date deadlineDate;
+
+    /** 季度截止月份(3/6/9/12) */
+    private String deadlineQuarterMonth;
+
+    /** 季度截止日期 */
+    private Integer deadlineQuarterDay;
+
     /** 状态:启用/禁用 */
     @Excel(name = "状态")
     private String status;
@@ -118,6 +127,36 @@ public class SysTask extends BaseEntity
     public void setDeadlineWeekday(String deadlineWeekday)
     {
         this.deadlineWeekday = deadlineWeekday;
+    }
+
+    public java.util.Date getDeadlineDate()
+    {
+        return deadlineDate;
+    }
+
+    public void setDeadlineDate(java.util.Date deadlineDate)
+    {
+        this.deadlineDate = deadlineDate;
+    }
+
+    public String getDeadlineQuarterMonth()
+    {
+        return deadlineQuarterMonth;
+    }
+
+    public void setDeadlineQuarterMonth(String deadlineQuarterMonth)
+    {
+        this.deadlineQuarterMonth = deadlineQuarterMonth;
+    }
+
+    public Integer getDeadlineQuarterDay()
+    {
+        return deadlineQuarterDay;
+    }
+
+    public void setDeadlineQuarterDay(Integer deadlineQuarterDay)
+    {
+        this.deadlineQuarterDay = deadlineQuarterDay;
     }
 
     public String getStatus()

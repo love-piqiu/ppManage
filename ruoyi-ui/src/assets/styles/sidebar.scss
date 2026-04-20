@@ -64,6 +64,59 @@
       margin-right: 10px !important;
     }
 
+    // 菜单首字样式 - 展开时隐藏
+    .menu-first-char {
+      display: none !important;
+      font-size: 14px;
+      font-weight: 500;
+      margin-left: 6px;
+    }
+
+    // 折叠时显示首字
+    .el-menu--collapse {
+      .menu-first-char {
+        display: inline-block !important;
+        height: auto !important;
+        width: auto !important;
+        visibility: visible !important;
+        overflow: visible !important;
+      }
+      .menu-title-full {
+        display: none !important;
+        height: 0 !important;
+        width: 0 !important;
+        visibility: hidden !important;
+        overflow: hidden !important;
+      }
+      .svg-icon {
+        margin-right: 0 !important;
+      }
+      // 处理单级菜单项
+      .el-menu-item {
+        .menu-first-char {
+          display: inline-block !important;
+          height: auto !important;
+          width: auto !important;
+          visibility: visible !important;
+        }
+        .menu-title-full {
+          display: none !important;
+        }
+      }
+      // 处理子菜单标题
+      .el-submenu__title {
+        .menu-first-char {
+          display: inline-block !important;
+          height: auto !important;
+          width: auto !important;
+          visibility: visible !important;
+        }
+        .menu-title-full {
+          display: none !important;
+        }
+      }
+    }
+
     .el-menu {
       border: none;
       height: 100%;
@@ -201,23 +254,35 @@
 
   .hideSidebar {
     .sidebar-container {
-      width: 54px !important;
+      width: 70px !important;
     }
 
     .main-container {
-      margin-left: 54px;
+      margin-left: 70px;
     }
 
     .el-menu:not(.el-menu--horizontal) {
       .submenu-title-noDropdown {
-        padding: 0 !important;
+        padding: 0 10px !important;
         position: relative;
 
         .el-tooltip {
           padding: 0 !important;
 
           .svg-icon {
-            margin-left: 20px;
+            margin-left: 12px;
+          }
+
+          // 折叠时在tooltip内显示首字
+          .menu-first-char {
+            display: inline-block !important;
+            height: auto !important;
+            visibility: visible !important;
+            overflow: visible !important;
+          }
+
+          .menu-title-full {
+            display: none !important;
           }
         }
       }
@@ -227,25 +292,38 @@
       overflow: hidden;
 
       &>.el-submenu__title {
-        padding: 0 !important;
+        padding: 0 10px !important;
 
         .svg-icon {
-          margin-left: 20px;
+          margin-left: 12px;
         }
 
+        .menu-first-char {
+          display: inline-block !important;
+        }
       }
     }
 
     .el-menu--collapse {
       .el-submenu {
         &>.el-submenu__title {
-          &>span {
-            height: 0;
-            width: 0;
-            overflow: hidden;
-            visibility: hidden;
-            display: inline-block;
+          .menu-first-char {
+            display: inline-block !important;
+            height: auto !important;
+            visibility: visible !important;
           }
+          &>.menu-title-full {
+            height: 0 !important;
+            width: 0 !important;
+            overflow: hidden !important;
+            visibility: hidden !important;
+            display: inline-block !important;
+          }
+        }
+      }
+      .el-menu-item {
+        .menu-first-char {
+          display: inline-block !important;
         }
       }
     }

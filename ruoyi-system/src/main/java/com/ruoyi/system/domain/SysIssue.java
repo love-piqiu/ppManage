@@ -27,6 +27,10 @@ public class SysIssue extends BaseEntity
     @Excel(name = "项目名称")
     private String projectName;
 
+    /** 客户名称 */
+    @Excel(name = "客户名称")
+    private String customer;
+
     /** 问题描述 */
     @Excel(name = "问题描述")
     @NotNull(message = "问题描述不能为空")
@@ -73,6 +77,9 @@ public class SysIssue extends BaseEntity
     /** 删除标志 */
     private String delFlag;
 
+    /** 搜索关键词 */
+    private String keyword;
+
     public Long getId()
     {
         return id;
@@ -101,6 +108,16 @@ public class SysIssue extends BaseEntity
     public void setProjectName(String projectName)
     {
         this.projectName = projectName;
+    }
+
+    public String getCustomer()
+    {
+        return customer;
+    }
+
+    public void setCustomer(String customer)
+    {
+        this.customer = customer;
     }
 
     public String getDescription()
@@ -211,5 +228,15 @@ public class SysIssue extends BaseEntity
     public void setDelFlag(String delFlag)
     {
         this.delFlag = delFlag;
+    }
+
+    public String getKeyword()
+    {
+        return keyword;
+    }
+
+    public void setKeyword(String keyword)
+    {
+        this.keyword = keyword;
     }
 }

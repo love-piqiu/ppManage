@@ -125,6 +125,16 @@ public class SysPersonController extends BaseController
     }
 
     /**
+     * 获取人员选择框列表（用于项目关联，包含所有在职人员）
+     */
+    @GetMapping("/optionselectAll")
+    public AjaxResult optionselectAll()
+    {
+        List<SysPerson> persons = personService.selectPersonAllForProject();
+        return success(persons);
+    }
+
+    /**
      * 获取人员参与的项目列表
      */
     @PreAuthorize("@ss.hasPermi('system:person:query')")
@@ -156,5 +166,16 @@ public class SysPersonController extends BaseController
     public AjaxResult removeProject(@PathVariable Long id)
     {
         return toAjax(personProjectService.deleteById(id));
+    }
+
+    /**
+     * 获取人员状态统计
+     */
+    @GetMapping("/statusCount")
+    public AjaxResult statusCount()
+    {
+        int activeCount = personService.countActivePerson();
+        int inactiveCount = personService.countInactivePerson();
+        return success().put("active", activeCount).put("inactive", inactiveCount);
     }
 }

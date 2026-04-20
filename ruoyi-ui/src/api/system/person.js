@@ -75,3 +75,53 @@ export function listPersonAll() {
     method: 'get'
   })
 }
+
+// 查询所有在职人员（用于项目关联，不限制直属下级）
+export function listPersonAllForProject() {
+  return request({
+    url: '/system/person/optionselectAll',
+    method: 'get'
+  })
+}
+
+// 查询人员状态统计
+export function getPersonStatusCount() {
+  return request({
+    url: '/system/person/statusCount',
+    method: 'get'
+  })
+}
+
+// 查询人员动态记录列表
+export function getPersonRecords(personId) {
+  return request({
+    url: '/system/person/record/list/' + personId,
+    method: 'get'
+  })
+}
+
+// 新增人员动态记录
+export function addPersonRecord(data) {
+  return request({
+    url: '/system/person/record',
+    method: 'post',
+    data: data
+  })
+}
+
+// 修改人员动态记录
+export function updatePersonRecord(data) {
+  return request({
+    url: '/system/person/record',
+    method: 'put',
+    data: data
+  })
+}
+
+// 删除人员动态记录
+export function delPersonRecord(id) {
+  return request({
+    url: '/system/person/record/' + id,
+    method: 'delete'
+  })
+}

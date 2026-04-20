@@ -8,6 +8,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <id     property="id"              column="id"               />
         <result property="projectId"       column="project_id"       />
         <result property="projectName"     column="project_name"     />
+        <result property="customer"        column="customer"         />
         <result property="description"     column="description"      />
         <result property="type"            column="type"             />
         <result property="severity"        column="severity"         />
@@ -27,46 +28,50 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectIssueVo">
-        select id, project_id, project_name, description, type, severity, status,
-               owner_id, owner_name, discover_date, plan_date, actual_date, solution,
-               remark, del_flag, create_by, create_time, update_by, update_time
-        from sys_issue
+        select i.id, i.project_id, i.project_name, p.customer as customer, i.description, i.type, i.severity, i.status,
+               i.owner_id, i.owner_name, i.discover_date, i.plan_date, i.actual_date, i.solution,
+               i.remark, i.del_flag, i.create_by, i.create_time, i.update_by, i.update_time
+        from sys_issue i
+        left join sys_project p on i.project_id = p.id
     </sql>
 
     <select id="selectIssueList" parameterType="SysIssue" resultMap="SysIssueResult">
         <include refid="selectIssueVo"/>
-        where del_flag = '0'
+        where i.del_flag = '0'
         <if test="projectId != null">
-            AND project_id = #{projectId}
+            AND i.project_id = #{projectId}
         </if>
         <if test="projectName != null and projectName != ''">
-            AND project_name like concat('%', #{projectName}, '%')
+            AND i.project_name like concat('%', #{projectName}, '%')
         </if>
         <if test="type != null and type != ''">
-            AND type = #{type}
+            AND i.type = #{type}
         </if>
         <if test="severity != null and severity != ''">
-            AND severity = #{severity}
+            AND i.severity = #{severity}
         </if>
         <if test="status != null and status != ''">
-            AND status = #{status}
+            AND i.status = #{status}
         </if>
         <if test="ownerId != null">
-            AND owner_id = #{ownerId}
+            AND i.owner_id = #{ownerId}
         </if>
-        order by severity desc, create_time desc
+        <if test="keyword != null and keyword != ''">
+            AND (i.description like concat('%', #{keyword}, '%') OR i.project_name like concat('%', #{keyword}, '%'))
+        </if>
+        order by i.severity desc, i.create_time desc
     </select>
 
     <select id="selectIssueById" parameterType="Long" resultMap="SysIssueResult">
         <include refid="selectIssueVo"/>
-        where id = #{id} and del_flag = '0'
+        where i.id = #{id} and i.del_flag = '0'
     </select>
 
     <select id="selectUnresolvedByProjectId" parameterType="Long" resultMap="SysIssueResult">
         <include refid="selectIssueVo"/>
-        where project_id = #{projectId} and del_flag = '0'
-              and status in ('待处理', '进行中')
-        order by severity desc, create_time desc
+        where i.project_id = #{projectId} and i.del_flag = '0'
+              and i.status in ('待处理', '进行中')
+        order by i.severity desc, i.create_time desc
     </select>
 
     <insert id="insertIssue" parameterType="SysIssue" useGeneratedKeys="true" keyProperty="id">

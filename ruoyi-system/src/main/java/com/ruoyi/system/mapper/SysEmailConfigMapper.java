@@ -23,4 +23,12 @@ public interface SysEmailConfigMapper
      * @return 结果
      */
     public int updateConfig(SysEmailConfig config);
+
+    /**
+     * 新增邮件配置
+     *
+     * @param config 邮件配置
+     * @return 结果
+     */
+    public int insertConfig(SysEmailConfig config);
 }

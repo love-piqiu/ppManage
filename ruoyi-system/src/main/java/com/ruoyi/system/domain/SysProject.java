@@ -2,6 +2,7 @@ package com.ruoyi.system.domain;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.ruoyi.common.annotation.Excel;
 import com.ruoyi.common.core.domain.BaseEntity;
@@ -70,6 +71,14 @@ public class SysProject extends BaseEntity
     @Excel(name = "状态")
     private String status;
 
+    /** 是否下辖:是/否 */
+    @Excel(name = "是否下辖")
+    private String isSubordinate;
+
+    /** 项目类型:外包/项目 */
+    @Excel(name = "项目类型")
+    private String projectType;
+
     /** 开始日期 */
     @JsonFormat(pattern = "yyyy-MM-dd")
     @Excel(name = "开始日期", width = 30, dateFormat = "yyyy-MM-dd")
@@ -80,6 +89,38 @@ public class SysProject extends BaseEntity
     @Excel(name = "计划结束", width = 30, dateFormat = "yyyy-MM-dd")
     private Date endDate;
 
+    /** 需求确认-计划时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private Date reqPlanDate;
+
+    /** 需求确认-完成时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private Date reqActualDate;
+
+    /** UAT测试-计划时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private Date uatPlanDate;
+
+    /** UAT测试-完成时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private Date uatActualDate;
+
+    /** 上线-计划时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private Date launchPlanDate;
+
+    /** 上线-完成时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private Date launchActualDate;
+
+    /** 验收-计划时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private Date acceptPlanDate;
+
+    /** 验收-完成时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private Date acceptActualDate;
+
     /** 实际结束日期 */
     @JsonFormat(pattern = "yyyy-MM-dd")
     @Excel(name = "实际结束", width = 30, dateFormat = "yyyy-MM-dd")
@@ -87,6 +128,31 @@ public class SysProject extends BaseEntity
 
     /** 删除标志 */
     private String delFlag;
+
+    /** 合同金额(元) */
+    @Excel(name = "合同金额(元)")
+    private BigDecimal contractAmount;
+
+    /** 已开票金额(元) - 计算字段 */
+    private BigDecimal invoicedAmount;
+
+    /** 问题数量 */
+    private Integer issueCount;
+
+    /** 风险数量 */
+    private Integer riskCount;
+
+    /** 参与人员数量 */
+    private Integer personCount;
+
+    /** 参与人员ID列表 */
+    private List<Long> participants;
+
+    /** 自定义里程碑列表（外包项目） */
+    private List<SysProjectMilestoneCustom> customMilestones;
+
+    /** 搜索关键字（项目名称或客户） */
+    private String keyword;
 
     public Long getId()
     {
@@ -228,6 +294,26 @@ public class SysProject extends BaseEntity
         this.status = status;
     }
 
+    public String getIsSubordinate()
+    {
+        return isSubordinate;
+    }
+
+    public void setIsSubordinate(String isSubordinate)
+    {
+        this.isSubordinate = isSubordinate;
+    }
+
+    public String getProjectType()
+    {
+        return projectType;
+    }
+
+    public void setProjectType(String projectType)
+    {
+        this.projectType = projectType;
+    }
+
     public Date getStartDate()
     {
         return startDate;
@@ -248,6 +334,86 @@ public class SysProject extends BaseEntity
         this.endDate = endDate;
     }
 
+    public Date getReqPlanDate()
+    {
+        return reqPlanDate;
+    }
+
+    public void setReqPlanDate(Date reqPlanDate)
+    {
+        this.reqPlanDate = reqPlanDate;
+    }
+
+    public Date getReqActualDate()
+    {
+        return reqActualDate;
+    }
+
+    public void setReqActualDate(Date reqActualDate)
+    {
+        this.reqActualDate = reqActualDate;
+    }
+
+    public Date getUatPlanDate()
+    {
+        return uatPlanDate;
+    }
+
+    public void setUatPlanDate(Date uatPlanDate)
+    {
+        this.uatPlanDate = uatPlanDate;
+    }
+
+    public Date getUatActualDate()
+    {
+        return uatActualDate;
+    }
+
+    public void setUatActualDate(Date uatActualDate)
+    {
+        this.uatActualDate = uatActualDate;
+    }
+
+    public Date getLaunchPlanDate()
+    {
+        return launchPlanDate;
+    }
+
+    public void setLaunchPlanDate(Date launchPlanDate)
+    {
+        this.launchPlanDate = launchPlanDate;
+    }
+
+    public Date getLaunchActualDate()
+    {
+        return launchActualDate;
+    }
+
+    public void setLaunchActualDate(Date launchActualDate)
+    {
+        this.launchActualDate = launchActualDate;
+    }
+
+    public Date getAcceptPlanDate()
+    {
+        return acceptPlanDate;
+    }
+
+    public void setAcceptPlanDate(Date acceptPlanDate)
+    {
+        this.acceptPlanDate = acceptPlanDate;
+    }
+
+    public Date getAcceptActualDate()
+    {
+        return acceptActualDate;
+    }
+
+    public void setAcceptActualDate(Date acceptActualDate)
+    {
+        this.acceptActualDate = acceptActualDate;
+    }
+
     public Date getActualEndDate()
     {
         return actualEndDate;
@@ -266,5 +432,85 @@ public class SysProject extends BaseEntity
     public void setDelFlag(String delFlag)
     {
         this.delFlag = delFlag;
+    }
+
+    public BigDecimal getContractAmount()
+    {
+        return contractAmount;
+    }
+
+    public void setContractAmount(BigDecimal contractAmount)
+    {
+        this.contractAmount = contractAmount;
+    }
+
+    public BigDecimal getInvoicedAmount()
+    {
+        return invoicedAmount;
+    }
+
+    public void setInvoicedAmount(BigDecimal invoicedAmount)
+    {
+        this.invoicedAmount = invoicedAmount;
+    }
+
+    public Integer getIssueCount()
+    {
+        return issueCount;
+    }
+
+    public void setIssueCount(Integer issueCount)
+    {
+        this.issueCount = issueCount;
+    }
+
+    public Integer getRiskCount()
+    {
+        return riskCount;
+    }
+
+    public void setRiskCount(Integer riskCount)
+    {
+        this.riskCount = riskCount;
+    }
+
+    public Integer getPersonCount()
+    {
+        return personCount;
+    }
+
+    public void setPersonCount(Integer personCount)
+    {
+        this.personCount = personCount;
+    }
+
+    public List<Long> getParticipants()
+    {
+        return participants;
+    }
+
+    public void setParticipants(List<Long> participants)
+    {
+        this.participants = participants;
+    }
+
+    public List<SysProjectMilestoneCustom> getCustomMilestones()
+    {
+        return customMilestones;
+    }
+
+    public void setCustomMilestones(List<SysProjectMilestoneCustom> customMilestones)
+    {
+        this.customMilestones = customMilestones;
+    }
+
+    public String getKeyword()
+    {
+        return keyword;
+    }
+
+    public void setKeyword(String keyword)
+    {
+        this.keyword = keyword;
     }
 }

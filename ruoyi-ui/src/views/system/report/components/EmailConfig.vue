@@ -18,16 +18,20 @@
           <div class="pp-schedule-title">下次发送时间</div>
           <div class="pp-schedule-desc">系统将自动生成并发送本周周报</div>
         </div>
-        <div class="pp-schedule-time">{{ sendDay }} {{ form.sendTime }}</div>
+        <div class="pp-schedule-time">{{ nextSendTime }}</div>
       </div>
 
       <div class="pp-form-row" v-if="form.autoSend">
         <div class="pp-form-group">
           <label class="pp-form-label">发送日期</label>
           <el-select v-model="form.sendDay" class="pp-form-input">
-            <el-option label="周五" value="周五" />
-            <el-option label="周四" value="周四" />
+            <el-option label="周一" value="周一" />
+            <el-option label="周二" value="周二" />
             <el-option label="周三" value="周三" />
+            <el-option label="周四" value="周四" />
+            <el-option label="周五" value="周五" />
+            <el-option label="周六" value="周六" />
+            <el-option label="周日" value="周日" />
           </el-select>
         </div>
         <div class="pp-form-group">
@@ -49,11 +53,11 @@
       <div class="pp-form-row">
         <div class="pp-form-group">
           <label class="pp-form-label">SMTP服务器</label>
-          <el-input v-model="form.smtpServer" class="pp-form-input" placeholder="如: smtp.qq.com" />
+          <el-input v-model="form.smtpServer" class="pp-form-input" placeholder="如: smtp.sina.com" />
         </div>
         <div class="pp-form-group">
           <label class="pp-form-label">端口</label>
-          <el-input v-model="form.smtpPort" class="pp-form-input" placeholder="如: 465" />
+          <el-input v-model.number="form.smtpPort" class="pp-form-input pp-port-input" placeholder="如: 465" type="number" />
         </div>
       </div>
       <div class="pp-form-row">
@@ -63,8 +67,8 @@
         </div>
         <div class="pp-form-group">
           <label class="pp-form-label">授权码/密码</label>
-          <el-input v-model="form.senderPassword" class="pp-form-input" type="password" placeholder="邮箱授权码或密码" />
-          <div class="pp-form-hint">QQ邮箱需使用授权码，非登录密码</div>
+          <el-input v-model="form.senderPassword" class="pp-form-input" type="password" placeholder="邮箱授权码或密码" show-password />
+          <div class="pp-form-hint">邮箱需使用授权码，非登录密码</div>
         </div>
       </div>
       <div class="pp-form-row">
@@ -88,19 +92,20 @@
 </template>
 
 <script>
-import { getEmailConfig } from '@/api/system/report'
+import { getEmailConfig, saveEmailConfig, testReportEmail } from '@/api/system/report'
 
 export default {
   name: 'EmailConfig',
   data() {
     return {
+      configId: null, // 保存从后端获取的配置ID
       form: {
-        autoSend: true,
+        autoSend: false,
         sendDay: '周五',
         sendTime: '17:00',
         recipients: '',
         smtpServer: '',
-        smtpPort: '',
+        smtpPort: 465,
         senderAccount: '',
         senderPassword: '',
         senderName: '',
@@ -109,8 +114,11 @@ export default {
     }
   },
   computed: {
-    sendDay() {
-      return this.form.sendDay || '周五'
+    nextSendTime() {
+      // 确保 sendDay 和 sendTime 有默认值
+      const day = this.form.sendDay ? this.form.sendDay : '周五'
+      const time = this.form.sendTime ? this.form.sendTime : '17:00'
+      return `${day} ${time}`
     }
   },
   created() {
@@ -121,15 +129,67 @@ export default {
       try {
         const res = await getEmailConfig()
         if (res.data) {
-          this.form = { ...this.form, ...res.data }
+          // 保存配置ID，用于更新
+          this.configId = res.data.id
+          // 映射后端字段到前端字段
+          const data = res.data
+          // 处理时间格式：数据库返回可能带秒或为null，需要处理
+          let sendTime = '17:00' // 默认值
+          if (data.sendTime) {
+            sendTime = data.sendTime
+            if (sendTime.length > 5) {
+              sendTime = sendTime.substring(0, 5)
+            }
+          }
+          this.form = {
+            autoSend: data.enabled === 1,
+            sendDay: data.sendDay || '周五',
+            sendTime: sendTime,
+            recipients: data.recipientEmail || '',
+            smtpServer: data.host || '',
+            smtpPort: data.port || 465,
+            senderAccount: data.username || '',
+            senderPassword: '', // 密码不返回，需要重新输入
+            senderName: data.senderName || '',
+            subjectTemplate: data.emailSubject || '项目周报 - {日期}'
+          }
         }
-      } catch (e) {}
+      } catch (e) {
+        console.error('加载邮件配置失败:', e)
+      }
     },
-    handleTest() {
-      this.$emit('test')
+    async handleTest() {
+      // 先保存当前配置，再发送测试邮件
+      await this.doSave()
+      try {
+        await testReportEmail()
+        this.$modal.msgSuccess('测试邮件已发送，请检查收件箱')
+      } catch (e) {
+        // 错误信息会在API层面处理
+      }
     },
-    handleSave() {
-      this.$emit('save', this.form)
+    async handleSave() {
+      await this.doSave()
+      this.$modal.msgSuccess('配置保存成功')
+    },
+    async doSave() {
+      // 映射前端字段到后端字段，必须传递id用于更新
+      const config = {
+        id: this.configId || 1, // 如果没有获取到id，默认使用1（数据库初始化的id）
+        host: this.form.smtpServer,
+        port: this.form.smtpPort,
+        username: this.form.senderAccount,
+        password: this.form.senderPassword,
+        recipientEmail: this.form.recipients,
+        senderName: this.form.senderName,
+        emailSubject: this.form.subjectTemplate,
+        sendDay: this.form.sendDay,
+        sendTime: this.form.sendTime,
+        enabled: this.form.autoSend ? 1 : 0
+      }
+      await saveEmailConfig(config)
+      // 保存成功后重新加载配置
+      await this.loadConfig()
     }
   }
 }
@@ -239,6 +299,23 @@ export default {
 }
 .pp-form-input {
   width: 100%;
+}
+// 端口输入框样式优化
+.pp-port-input {
+  ::v-deep input {
+    text-align: left;
+    padding-left: 15px;
+    // 去掉 number 输入框的上下箭头
+    -moz-appearance: textfield;
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+  }
+  ::v-deep .el-input__suffix {
+    display: none;
+  }
 }
 .pp-form-hint {
   font-size: 11px;

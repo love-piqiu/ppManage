@@ -48,4 +48,16 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where id = #{id}
     </update>
 
+    <insert id="insertConfig" parameterType="SysEmailConfig">
+        insert into sys_email_config (
+            host, port, username, password, recipient_email,
+            sender_name, email_subject, send_day, send_time, enabled,
+            create_by, create_time
+        ) values (
+            #{host}, #{port}, #{username}, #{password}, #{recipientEmail},
+            #{senderName}, #{emailSubject}, #{sendDay}, #{sendTime}, #{enabled},
+            #{updateBy}, sysdate()
+        )
+    </insert>
+
 </mapper>

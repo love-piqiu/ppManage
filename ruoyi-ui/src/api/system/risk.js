@@ -51,3 +51,11 @@ export function delRisk(riskId) {
     method: 'delete'
   })
 }
+
+// 根据项目ID查询未消除风险列表
+export function listRiskByProject(projectId) {
+  return request({
+    url: '/system/risk/project/' + projectId,
+    method: 'get'
+  })
+}

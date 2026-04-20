@@ -17,7 +17,7 @@
     <week-selector v-model="period" @change="loadData" />
 
     <!-- 统计卡片 -->
-    <stat-cards :stats="stats" />
+    <stat-cards :stats="filteredStats" />
 
     <!-- Tab切换 -->
     <div class="pp-task-tabs">
@@ -34,7 +34,16 @@
         :task="task"
         :persons="persons"
         :instances="getTaskInstances(task.id)"
+        :period="period"
         @complete="handleComplete"
+        @uncomplete="handleUncomplete"
+        @createAndComplete="handleCreateAndComplete"
+        @completeAll="handleCompleteAll"
+        @uncompleteAll="handleUncompleteAll"
+        @completeDay="handleCompleteDay"
+        @uncompleteDay="handleUncompleteDay"
+        @edit="handleUpdate"
+        @delete="handleDelete"
       />
 
       <!-- 空状态 -->
@@ -60,23 +69,24 @@
           v-if="statsTab === 'task'"
           :tasks="currentTasks"
           :persons="persons"
-          :instances="instances"
+          :instances="filteredInstances"
           @complete="handleComplete"
+          @uncomplete="handleUncomplete"
         />
 
         <!-- 按人员查看 -->
         <div class="pp-person-stats" v-if="statsTab === 'person'">
           <div class="pp-person-stats-grid">
-            <div class="pp-person-stats-item" v-for="person in persons" :key="person.id">
-              <div class="pp-avatar-sm" :style="avatarStyle(person.name)">{{ person.name.charAt(0) }}</div>
+            <div class="pp-person-stats-item" :class="{ 'pp-person-incomplete': stat.rate < 100 }" v-for="stat in currentPersonStats" :key="stat.personId">
+              <div class="pp-avatar-sm" :style="avatarStyle(stat.personName)">{{ stat.personName.charAt(0) }}</div>
               <div class="pp-person-stats-info">
-                <div class="pp-person-stats-name">{{ person.name }}</div>
+                <div class="pp-person-stats-name">{{ stat.personName }}</div>
                 <div class="pp-person-stats-numbers">
-                  <span class="pp-done">{{ getPersonCompleted(person.id) }} 完成</span>
-                  <span class="pp-pending">{{ getPersonPending(person.id) }} 待完成</span>
+                  <span class="pp-done">{{ stat.completed }} 完成</span>
+                  <span class="pp-pending">{{ stat.pending }} 待完成</span>
                 </div>
-                <div class="pp-person-stats-rate" :style="{ color: getPersonRateColor(person.id) }">
-                  {{ getPersonRate(person.id) }}% 完成率
+                <div class="pp-person-stats-rate" :style="{ color: getRateColor(stat.rate) }">
+                  {{ stat.rate }}% 完成率
                 </div>
               </div>
             </div>
@@ -100,12 +110,17 @@
         <el-form-item v-if="form.type === '周期性'" label="周期" prop="cycle">
           <el-select v-model="form.cycle" placeholder="请选择周期">
             <el-option label="每日" value="每日" />
+            <el-option label="每工作日" value="每工作日" />
             <el-option label="每周" value="每周" />
             <el-option label="每月" value="每月" />
+            <el-option label="每季" value="每季" />
           </el-select>
         </el-form-item>
-        <el-form-item label="截止时间" prop="deadlineTime">
+        <el-form-item v-if="form.type === '周期性'" label="截止时间" prop="deadlineTime">
           <el-time-picker v-model="form.deadlineTime" placeholder="选择截止时间" value-format="HH:mm:ss" />
+        </el-form-item>
+        <el-form-item v-if="form.type === '一次性'" label="截止日期" prop="deadlineDate">
+          <el-date-picker v-model="form.deadlineDate" type="datetime" placeholder="选择截止日期时间" value-format="yyyy-MM-dd HH:mm:ss" />
         </el-form-item>
         <el-form-item v-if="form.cycle === '每周'" label="截止星期" prop="deadlineWeekday">
           <el-select v-model="form.deadlineWeekday" placeholder="请选择星期">
@@ -114,10 +129,21 @@
             <el-option label="周三" value="三" />
             <el-option label="周四" value="四" />
             <el-option label="周五" value="五" />
+            <el-option label="周六" value="六" />
+            <el-option label="周日" value="日" />
           </el-select>
         </el-form-item>
         <el-form-item v-if="form.cycle === '每月'" label="截止日期" prop="deadlineDay">
           <el-input-number v-model="form.deadlineDay" :min="1" :max="28" />
+        </el-form-item>
+        <el-form-item v-if="form.cycle === '每季'" label="截止季度日" prop="deadlineQuarterDay">
+          <el-select v-model="form.deadlineQuarterMonth" placeholder="选择季度末月" style="width: 120px;">
+            <el-option label="3月" value="3" />
+            <el-option label="6月" value="6" />
+            <el-option label="9月" value="9" />
+            <el-option label="12月" value="12" />
+          </el-select>
+          <el-input-number v-model="form.deadlineQuarterDay" :min="1" :max="28" style="margin-left: 8px;" />
         </el-form-item>
         <el-form-item label="状态" prop="status">
           <el-radio-group v-model="form.status">
@@ -138,9 +164,9 @@
 </template>
 
 <script>
-import { listTask, getTask, addTask, updateTask, delTask, listInstance, completeTask, getPeriodStatistics } from '@/api/system/task'
+import { listTask, getTask, addTask, updateTask, delTask, listInstance, completeTask, uncompleteTask, getPeriodStatistics, getOnceTaskStatistics, addInstance } from '@/api/system/task'
 import { listPersonAll } from '@/api/system/person'
-import { getCurrentWeek } from '@/utils/date'
+import { getCurrentWeek, getWeekDays, getWeekRange } from '@/utils/date'
 import WeekSelector from './components/WeekSelector.vue'
 import StatCards from './components/StatCards.vue'
 import TaskCard from './components/TaskCard.vue'
@@ -156,13 +182,18 @@ export default {
       statsTab: 'task',
       loading: false,
 
-      // 统计数据
-      stats: { completed: 0, pending: 0, overdue: 0, rate: 0 },
+      // 周期性任务统计数据
+      cycleStats: { completed: 0, pending: 0, overdue: 0, rate: 0 },
+      cycleInstances: [],
+      cyclePersonStats: [], // 人员统计数据
+      // 一次性任务统计数据
+      onceStats: { completed: 0, pending: 0, overdue: 0, rate: 0 },
+      onceInstances: [],
+      oncePersonStats: [], // 一次性任务人员统计数据
 
       // 任务数据
       cycleTasks: [],
       onceTasks: [],
-      instances: [],
 
       // 人员数据
       persons: [],
@@ -190,6 +221,18 @@ export default {
   computed: {
     currentTasks() {
       return this.activeTab === 'cycle' ? this.cycleTasks : this.onceTasks
+    },
+    instances() {
+      return this.activeTab === 'cycle' ? this.cycleInstances : this.onceInstances
+    },
+    filteredInstances() {
+      return this.instances // 已经是当前 tab 的数据了
+    },
+    filteredStats() {
+      return this.activeTab === 'cycle' ? this.cycleStats : this.onceStats
+    },
+    currentPersonStats() {
+      return this.activeTab === 'cycle' ? this.cyclePersonStats : this.oncePersonStats
     }
   },
   created() {
@@ -209,18 +252,68 @@ export default {
         const taskRes = await listTask({ status: '启用' })
         const allTasks = taskRes.rows || []
         this.cycleTasks = allTasks.filter(t => t.type === '周期性')
-        this.onceTasks = allTasks.filter(t => t.type === '一次性')
 
-        // 获取当前周期的统计数据
-        const statsRes = await getPeriodStatistics(this.period)
-        const statsData = statsRes.data || {}
-        this.stats = {
-          completed: statsData.completed || 0,
-          pending: statsData.pending || 0,
-          overdue: statsData.overdue || 0,
-          rate: statsData.rate || 0
+        // 获取周期性任务统计数据（依赖 period）
+        const cycleRes = await getPeriodStatistics(this.period)
+        const cycleData = cycleRes.data || {}
+        this.cycleStats = {
+          completed: cycleData.completed || 0,
+          pending: cycleData.pending || 0,
+          overdue: cycleData.overdue || 0,
+          rate: cycleData.rate || 0
         }
-        this.instances = statsData.instances || []
+        this.cycleInstances = cycleData.instances || []
+        this.cyclePersonStats = cycleData.personStats || []
+
+        // 获取一次性任务统计数据（不依赖 period）
+        const onceRes = await getOnceTaskStatistics()
+        const onceData = onceRes.data || {}
+
+        // 根据当前周期过滤一次性任务：只显示截止日期在本周范围内的任务
+        const weekRange = getWeekRange(this.period)
+        const weekStart = weekRange.monday
+        const weekEnd = weekRange.sunday
+        weekEnd.setHours(23, 59, 59, 999) // 设置为周日最后一刻
+
+        // 过滤一次性任务：截止日期在本周范围内
+        const allOnceTasks = allTasks.filter(t => t.type === '一次性')
+        this.onceTasks = allOnceTasks.filter(t => {
+          if (!t.deadlineDate) return false // 没有截止日期的不显示
+          const deadline = new Date(t.deadlineDate)
+          return deadline >= weekStart && deadline <= weekEnd
+        })
+
+        // 过滤一次性任务实例：只保留当前显示任务的实例
+        const visibleTaskIds = this.onceTasks.map(t => t.id)
+        const filteredInstances = (onceData.instances || []).filter(i => visibleTaskIds.includes(i.taskId))
+
+        this.onceStats = {
+          completed: filteredInstances.filter(i => i.completed === 1).length,
+          pending: filteredInstances.filter(i => i.completed === 0).length,
+          overdue: 0,
+          rate: filteredInstances.length > 0 ? Math.round(filteredInstances.filter(i => i.completed === 1).length * 100 / filteredInstances.length) : 0
+        }
+        this.onceInstances = filteredInstances
+
+        // 计算一次性任务的人员统计（基于过滤后的实例）
+        const oncePersonStatsMap = new Map()
+        this.persons.forEach(p => {
+          const personInstances = filteredInstances.filter(i => i.personId === p.id)
+          if (personInstances.length > 0) {
+            const completed = personInstances.filter(i => i.completed === 1).length
+            const pending = personInstances.filter(i => i.completed === 0).length
+            const rate = Math.round(completed * 100 / personInstances.length)
+            oncePersonStatsMap.set(p.id, {
+              personId: p.id,
+              personName: p.name,
+              completed,
+              pending,
+              overdue: 0,
+              rate
+            })
+          }
+        })
+        this.oncePersonStats = Array.from(oncePersonStatsMap.values())
       } finally {
         this.loading = false
       }
@@ -231,15 +324,15 @@ export default {
     },
 
     getPersonCompleted(personId) {
-      return this.instances.filter(i => i.personId === personId && i.completed === 1).length
+      return this.filteredInstances.filter(i => i.personId === personId && i.completed === 1).length
     },
 
     getPersonPending(personId) {
-      return this.instances.filter(i => i.personId === personId && i.completed === 0).length
+      return this.filteredInstances.filter(i => i.personId === personId && i.completed === 0).length
     },
 
     getPersonRate(personId) {
-      const personInstances = this.instances.filter(i => i.personId === personId)
+      const personInstances = this.filteredInstances.filter(i => i.personId === personId)
       const total = personInstances.length
       const completed = personInstances.filter(i => i.completed === 1).length
       return total > 0 ? Math.round(completed * 100 / total) : 0
@@ -247,6 +340,10 @@ export default {
 
     getPersonRateColor(personId) {
       const rate = this.getPersonRate(personId)
+      return rate >= 80 ? '#10B981' : rate >= 50 ? '#F59E0B' : '#EF4444'
+    },
+
+    getRateColor(rate) {
       return rate >= 80 ? '#10B981' : rate >= 50 ? '#F59E0B' : '#EF4444'
     },
 
@@ -271,6 +368,203 @@ export default {
       }
     },
 
+    async handleCreateAndComplete(data) {
+      try {
+        await this.$modal.confirm('确认完成该任务？')
+        // 格式化日期为 yyyy-MM-dd HH:mm:ss
+        const now = new Date()
+        const deadlineStr = this.formatDate(now)
+        // 先创建 instance
+        // 对于每日任务，period 使用具体日期；对于每周/每月，使用周标识
+        const instancePeriod = data.date || this.period
+        const newInstance = {
+          taskId: data.taskId,
+          taskName: data.taskName,
+          personId: data.personId,
+          personName: data.personName,
+          period: instancePeriod,
+          deadline: deadlineStr,
+          completed: 0
+        }
+        const res = await addInstance(newInstance)
+        if (res.code === 200) {
+          // 然后标记完成
+          await completeTask(res.data) // addInstance 返回新创建的 id
+          this.$modal.msgSuccess('已完成')
+          await this.loadData()
+        }
+      } catch (e) {
+        // 用户取消或失败
+      }
+    },
+
+    formatDate(date) {
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      const hours = String(date.getHours()).padStart(2, '0')
+      const minutes = String(date.getMinutes()).padStart(2, '0')
+      const seconds = String(date.getSeconds()).padStart(2, '0')
+      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+    },
+
+    async handleCompleteAll(data) {
+      try {
+        await this.$modal.confirm('确认完成所有未完成的任务？')
+        const now = new Date()
+        const deadlineStr = this.formatDate(now)
+        const { taskId, taskName, persons, instances, cycle } = data
+
+        // 对于每日/每工作日任务，需要为每个人员每个日期创建 instance
+        if (cycle === '每日' || cycle === '每工作日') {
+          const weekDays = getWeekDays(this.period)
+          const days = cycle === '每工作日' ? weekDays.slice(0, 5) : weekDays
+          const promises = []
+
+          // 遍历每个日期和每个人员
+          days.forEach(day => {
+            persons.forEach(person => {
+              // 查找该人员该日期的 instance
+              const existingInstance = instances.find(i => i.personId === person.id && i.period === day.date)
+              if (existingInstance) {
+                // 如果存在但未完成，完成它
+                if (existingInstance.completed === 0) {
+                  promises.push(completeTask(existingInstance.id))
+                }
+              } else {
+                // 如果不存在，创建并完成
+                const newInstance = {
+                  taskId: taskId,
+                  taskName: taskName,
+                  personId: person.id,
+                  personName: person.name,
+                  period: day.date,
+                  deadline: deadlineStr,
+                  completed: 0
+                }
+                promises.push(addInstance(newInstance).then(res => {
+                  if (res.code === 200) {
+                    return completeTask(res.data)
+                  }
+                }))
+              }
+            })
+          })
+
+          await Promise.all(promises)
+        } else {
+          // 对于每周/每月任务，按人员处理
+          const pendingInstances = instances.filter(i => i.completed === 0)
+          const noInstancePersons = persons.filter(p => !instances.find(i => i.personId === p.id))
+
+          // 并行处理：完成已有 instance 的
+          const completePromises = pendingInstances.map(inst => completeTask(inst.id))
+
+          // 并行处理：创建并完成没有 instance 的
+          const createAndCompletePromises = noInstancePersons.map(person => {
+            const newInstance = {
+              taskId: taskId,
+              taskName: taskName,
+              personId: person.id,
+              personName: person.name,
+              period: this.period,
+              deadline: deadlineStr,
+              completed: 0
+            }
+            return addInstance(newInstance).then(res => {
+              if (res.code === 200) {
+                return completeTask(res.data)
+              }
+            })
+          })
+
+          await Promise.all([...completePromises, ...createAndCompletePromises])
+        }
+
+        this.$modal.msgSuccess('全部已完成')
+        await this.loadData()
+      } catch (e) {
+        // 用户取消或失败
+      }
+    },
+
+    async handleUncomplete(instance) {
+      try {
+        await this.$modal.confirm('确认取消完成该任务？')
+        await uncompleteTask(instance.id)
+        this.$modal.msgSuccess('已取消完成')
+        await this.loadData()
+      } catch (e) {
+        // 用户取消或失败
+      }
+    },
+
+    async handleUncompleteAll(data) {
+      try {
+        await this.$modal.confirm('确认取消所有已完成的任务？')
+        const { instances } = data
+        // 找出所有已完成的 instance
+        const completedInstances = instances.filter(i => i.completed === 1)
+        // 并行处理：取消完成
+        const uncompletePromises = completedInstances.map(inst => uncompleteTask(inst.id))
+        await Promise.all(uncompletePromises)
+        this.$modal.msgSuccess('已取消全部完成')
+        await this.loadData()
+      } catch (e) {
+        // 用户取消或失败
+      }
+    },
+
+    async handleCompleteDay(data) {
+      try {
+        await this.$modal.confirm(`确认完成 ${data.date} 所有人员的任务？`)
+        const now = new Date()
+        const deadlineStr = this.formatDate(now)
+        const { taskId, taskName, instances, noInstancePersons, date } = data
+
+        // 并行处理：完成已有 instance 的
+        const completePromises = instances.map(inst => completeTask(inst.id))
+
+        // 并行处理：创建并完成没有 instance 的
+        const createAndCompletePromises = noInstancePersons.map(person => {
+          const newInstance = {
+            taskId: taskId,
+            taskName: taskName,
+            personId: person.id,
+            personName: person.name,
+            period: date,
+            deadline: deadlineStr,
+            completed: 0
+          }
+          return addInstance(newInstance).then(res => {
+            if (res.code === 200) {
+              return completeTask(res.data)
+            }
+          })
+        })
+
+        await Promise.all([...completePromises, ...createAndCompletePromises])
+        this.$modal.msgSuccess('已完成')
+        await this.loadData()
+      } catch (e) {
+        // 用户取消或失败
+      }
+    },
+
+    async handleUncompleteDay(data) {
+      try {
+        await this.$modal.confirm(`确认取消 ${data.date} 所有已完成任务？`)
+        const { instances } = data
+        // 并行处理：取消完成
+        const uncompletePromises = instances.map(inst => uncompleteTask(inst.id))
+        await Promise.all(uncompletePromises)
+        this.$modal.msgSuccess('已取消完成')
+        await this.loadData()
+      } catch (e) {
+        // 用户取消或失败
+      }
+    },
+
     reset() {
       this.form = {
         id: undefined,
@@ -280,6 +574,9 @@ export default {
         deadlineTime: '18:00',
         deadlineDay: 5,
         deadlineWeekday: '五',
+        deadlineDate: undefined,
+        deadlineQuarterMonth: '3',
+        deadlineQuarterDay: 25,
         status: '启用',
         description: undefined
       }
@@ -479,6 +776,11 @@ export default {
   background: #F9FAFB;
   border-radius: 8px;
   border: 1px solid #E5E7EB;
+
+  &.pp-person-incomplete {
+    background: #FEF3C7;
+    border-color: #F59E0B;
+  }
 }
 
 .pp-avatar-sm {
