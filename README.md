@@ -71,8 +71,13 @@ npm run dev
 ## 文档
 
 - [项目诞生记录](docs/JOURNEY.md)
+- [需求规格说明书](docs/PRD.md)
+- [架构设计文档](docs/ARCHITECTURE.md)
+- [概要设计文档](docs/HLD.md)
+- [详细设计文档](docs/LLD.md)
 - [数据库设计](docs/DATABASE.md)
 - [部署文档](docs/DEPLOYMENT.md)
+- [用户手册](docs/USER_MANUAL.md)
 - [变更日志](docs/CHANGELOG.md)
 
 ## 许可证
