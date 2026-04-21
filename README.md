@@ -78,6 +78,8 @@ npm run dev
 - [数据库设计](docs/DATABASE.md)
 - [部署文档](docs/DEPLOYMENT.md)
 - [用户手册](docs/USER_MANUAL.md)
+- [测试计划](docs/TEST_PLAN.md)
+- [测试用例](docs/TEST_CASES.md)
 - [变更日志](docs/CHANGELOG.md)
 
 ## 许可证
