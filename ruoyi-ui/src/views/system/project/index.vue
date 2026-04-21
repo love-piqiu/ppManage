@@ -87,7 +87,7 @@
           </td>
           <td>{{ row.pmName || '-' }}</td>
           <td>
-            <div class="pp-usage-cell">
+            <div class="pp-usage-cell" v-if="row.isSubordinate === subordinate.YES">
               <div class="pp-usage-row">
                 <span class="pp-usage-label">成本</span>
                 <div class="pp-usage-bar">
@@ -103,6 +103,7 @@
                 <span class="pp-usage-value" :class="{ danger: row.hourUsage > 100 }">{{ row.hourUsage || 0 }}%</span>
               </div>
             </div>
+            <span v-else class="pp-no-milestone">-</span>
           </td>
           <td>
             <div class="pp-milestone-cell" v-if="row.isSubordinate === subordinate.YES">
@@ -115,7 +116,7 @@
             <span v-else class="pp-no-milestone">-</span>
           </td>
           <td>
-            <div class="pp-invoice-cell">
+            <div class="pp-invoice-cell" v-if="row.isSubordinate === subordinate.YES">
               <div class="pp-invoice-header">
                 <span>合同: ¥{{ row.contractAmount || 0 }}元</span>
                 <span class="pp-invoice-total">已开: ¥{{ row.invoicedAmount || 0 }}元</span>
@@ -127,6 +128,7 @@
               </div>
               <span class="pp-invoice-add" @click="addInvoice(row)">+ 添加开票</span>
             </div>
+            <span v-else class="pp-no-milestone">-</span>
           </td>
           <td>
             <div class="pp-action-btns">
@@ -198,6 +200,21 @@
         </el-row>
         <el-row :gutter="12">
           <el-col :span="12">
+            <el-form-item label="项目类型" prop="projectType">
+              <el-select v-model="form.projectType" placeholder="请选择" style="width:100%" @change="handleProjectTypeChange">
+                <el-option label="项目" :value="projectType.PROJECT" />
+                <el-option label="外包" :value="projectType.OUTSOURCE" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="合同金额" prop="contractAmount">
+              <el-input-number v-model="form.contractAmount" :precision="2" :min="0" style="width:100%" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="12">
+          <el-col :span="12">
             <el-form-item label="是否下辖" prop="isSubordinate">
               <el-switch v-model="form.isSubordinate" :active-value="subordinate.YES" :inactive-value="subordinate.NO" />
               <div class="pp-form-tip">下辖项目有风险管理、问题管理、重要事项</div>
@@ -208,14 +225,6 @@
         <!-- 下辖项目特有字段 -->
         <template v-if="form.isSubordinate === subordinate.YES">
           <el-row :gutter="12">
-            <el-col :span="12">
-              <el-form-item label="项目类型" prop="projectType">
-                <el-select v-model="form.projectType" placeholder="请选择" style="width:100%" @change="handleProjectTypeChange">
-                  <el-option label="项目" :value="projectType.PROJECT" />
-                  <el-option label="外包" :value="projectType.OUTSOURCE" />
-                </el-select>
-              </el-form-item>
-            </el-col>
             <el-col :span="12">
               <el-form-item label="销售人员" prop="salesName">
                 <el-input v-model="form.salesName" placeholder="请输入销售人员姓名" />
@@ -365,6 +374,10 @@
             <div class="pp-info-label">参与人员</div>
             <div class="pp-info-value">{{ detailData.personCount || 0 }}人</div>
           </div>
+          <div class="pp-info-item">
+            <div class="pp-info-label">合同金额</div>
+            <div class="pp-info-value">¥ {{ detailData.contractAmount || 0 }} 元</div>
+          </div>
           <!-- 下辖项目特有 -->
           <template v-if="detailData.isSubordinate === subordinate.YES">
             <div class="pp-info-item">
@@ -374,10 +387,6 @@
             <div class="pp-info-item">
               <div class="pp-info-label">项目成本</div>
               <div class="pp-info-value">¥ {{ detailData.cost || 0 }} 元</div>
-            </div>
-            <div class="pp-info-item">
-              <div class="pp-info-label">合同金额</div>
-              <div class="pp-info-value">¥ {{ detailData.contractAmount || 0 }} 元</div>
             </div>
             <div class="pp-info-item">
               <div class="pp-info-label">已开票</div>

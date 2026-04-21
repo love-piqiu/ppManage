@@ -75,7 +75,7 @@
                 <td>{{ p.name }}</td>
                 <td>
                   <div class="pp-stage-cell">
-                    <span class="pp-stage-dot" :class="getStageClass(p.stageStatus)"></span>
+                    <span class="pp-stage-dot" :class="getStageClass(p)"></span>
                     <span class="pp-stage-name">{{ p.stage }}</span>
                     <span class="pp-stage-date" :class="getStageDateClass(p)">{{ p.stageDateInfo }}</span>
                   </div>
@@ -344,17 +344,26 @@ export default {
       this.weekRange = row.weekRange;
       this.loadReportData();
     },
-    // 样式辅助
-    getStageClass(status) {
-      if (status === 'completed') return 'completed';
-      if (status === 'warning') return 'warning';
-      if (status === 'danger') return 'danger';
-      return 'pending';
+    // 样式辅助 - 按阶段名称和状态区分图标颜色
+    getStageClass(p) {
+      // 暂停项目：灰色空心圆
+      if (p.status === '暂停') return 'paused';
+      // 已完成项目：绿色勾号
+      if (p.status === '已完成') return 'success';
+      // 已到期：红色感叹号
+      if (p.stageStatus === 'danger') return 'danger';
+      // 按阶段名称区分
+      const stage = p.stage || '';
+      if (stage === '验收交付' || stage === '上线部署') return 'success';
+      if (stage === 'UAT测试') return 'warning';
+      // 其他阶段（需求确认、开发阶段等）：蓝色实心圆
+      return 'active';
     },
     getStageDateClass(p) {
       if (p.stageStatus === 'completed') return 'completed';
       if (p.stageStatus === 'warning') return 'warning';
       if (p.stageStatus === 'danger') return 'danger';
+      if (p.stageStatus === 'paused') return 'paused';
       return '';
     },
     getUsageClass(val) {
@@ -443,9 +452,20 @@ export default {
 .pp-summary-bar { margin-top: 12px; padding: 12px; background: #EFF6FF; border-radius: 6px; font-size: 13px; color: #374151; }
 
 .pp-stage-cell { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.pp-stage-dot { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 11px; &.completed { background: #10B981; content: "✓"; } &.warning { background: #F59E0B; } &.danger { background: #EF4444; } &.pending { background: #9CA3AF; } }
+.pp-stage-dot { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 11px; font-weight: 600;
+  &.success { background: #10B981; &:before { content: "✓"; } }
+  &.warning { background: #F59E0B; &:before { content: "!"; } }
+  &.danger { background: #EF4444; &:before { content: "!"; } }
+  &.paused { background: #9CA3AF; &:before { content: "○"; } }
+  &.active { background: #2563EB; &:before { content: "●"; } }
+}
 .pp-stage-name { font-weight: 600; color: #374151; }
-.pp-stage-date { font-size: 11px; color: #6B7280; &.completed { color: #10B981; } &.warning { color: #F59E0B; } &.danger { color: #EF4444; } }
+.pp-stage-date { font-size: 11px; color: #6B7280;
+  &.completed { color: #10B981; }
+  &.warning { color: #F59E0B; }
+  &.danger { color: #EF4444; }
+  &.paused { color: #9CA3AF; }
+}
 
 .pp-usage-mini { display: flex; align-items: center; gap: 6px; }
 .pp-usage-bar-mini { width: 60px; height: 4px; background: #E5E7EB; border-radius: 2px; overflow: hidden; }

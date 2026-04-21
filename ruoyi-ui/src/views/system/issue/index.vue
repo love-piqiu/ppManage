@@ -189,12 +189,12 @@
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="发现日期" prop="discoverDate">
-              <el-date-picker v-model="form.discoverDate" type="date" value-format="yyyy-MM-dd" placeholder="选择发现日期" />
+              <el-date-picker v-model="form.discoverDate" type="date" value-format="yyyy-MM-dd" placeholder="选择发现日期" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="计划解决" prop="planDate">
-              <el-date-picker v-model="form.planDate" type="date" value-format="yyyy-MM-dd" placeholder="选择计划解决日期" />
+              <el-date-picker v-model="form.planDate" type="date" value-format="yyyy-MM-dd" placeholder="选择计划解决日期" style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>

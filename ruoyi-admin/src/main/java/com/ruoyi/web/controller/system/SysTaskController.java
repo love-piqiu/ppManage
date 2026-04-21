@@ -247,6 +247,11 @@ public class SysTaskController extends BaseController
         for (SysTask task : cycleTasks) {
             String cycle = task.getCycle();
 
+            // 季度任务只在季度末周统计
+            if ("每季".equals(cycle) && !isQuarterEndWeek(dateRange[0], dateRange[1])) {
+                continue;
+            }
+
             // 计算截止时间列表
             List<Date> deadlines = calculateTaskDeadlines(period, cycle, task, dateRange);
 
@@ -495,15 +500,19 @@ public class SysTaskController extends BaseController
                     deadlines.add(deadline);
                 }
             } else if ("每季".equals(cycle)) {
-                Integer day = task.getDeadlineQuarterDay();
-                String monthStr = task.getDeadlineQuarterMonth();
-                if (day != null && monthStr != null) {
-                    java.util.Calendar cal = java.util.Calendar.getInstance();
-                    int year = cal.get(java.util.Calendar.YEAR);
-                    String dateStr = String.format("%04d-%s-%02d", year, monthStr, Math.min(day, 28));
-                    Date deadline = sdf.parse(dateStr + " " + timeStr);
-                    deadlines.add(deadline);
-                }
+                // 自动计算当前季度的最后一天
+                java.util.Calendar cal = java.util.Calendar.getInstance();
+                int year = cal.get(java.util.Calendar.YEAR);
+                int month = cal.get(java.util.Calendar.MONTH) + 1;
+                int quarter = (month - 1) / 3 + 1; // 当前季度
+                int endMonth = quarter * 3; // 季度末月
+                // 获取该月最后一天
+                cal.set(java.util.Calendar.YEAR, year);
+                cal.set(java.util.Calendar.MONTH, endMonth - 1); // 月份从0开始
+                int lastDay = cal.getActualMaximum(java.util.Calendar.DAY_OF_MONTH);
+                String dateStr = String.format("%04d-%02d-%02d", year, endMonth, lastDay);
+                Date deadline = sdf.parse(dateStr + " " + timeStr);
+                deadlines.add(deadline);
             }
         } catch (Exception e) {
             // 解析失败
@@ -620,5 +629,41 @@ public class SysTaskController extends BaseController
     {
         if (deadline == null) return false;
         return deadline.before(new java.util.Date());
+    }
+
+    /**
+     * 判断当前周是否是季度末周（包含季度最后一天）
+     * @param startDate 周开始日期
+     * @param endDate 周结束日期
+     * @return 是否是季度末周
+     */
+    private boolean isQuarterEndWeek(String startDate, String endDate)
+    {
+        try {
+            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
+            java.util.Date start = sdf.parse(startDate);
+            java.util.Date end = sdf.parse(endDate);
+
+            java.util.Calendar cal = java.util.Calendar.getInstance();
+            int year = cal.get(java.util.Calendar.YEAR);
+
+            // 检查四个季度的最后一天是否在该周范围内
+            for (int quarter = 1; quarter <= 4; quarter++) {
+                int endMonth = quarter * 3;
+                cal.set(java.util.Calendar.YEAR, year);
+                cal.set(java.util.Calendar.MONTH, endMonth - 1);
+                int lastDay = cal.getActualMaximum(java.util.Calendar.DAY_OF_MONTH);
+                cal.set(java.util.Calendar.DAY_OF_MONTH, lastDay);
+                java.util.Date quarterLastDay = cal.getTime();
+
+                if (!quarterLastDay.before(start) && !quarterLastDay.after(end)) {
+                    return true;
+                }
+            }
+
+            return false;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

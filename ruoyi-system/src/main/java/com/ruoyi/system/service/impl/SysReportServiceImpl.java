@@ -173,9 +173,9 @@ public class SysReportServiceImpl implements ISysReportService
         {
             Map<String, Object> item = new HashMap<>();
             item.put("id", p.getId());
-            // 项目名称：客户名称+项目名称
+            // 项目名称：客户名称-项目名称
             String displayName = (p.getCustomer() != null && !p.getCustomer().isEmpty())
-                ? p.getCustomer() + "+" + p.getName()
+                ? p.getCustomer() + "-" + p.getName()
                 : p.getName();
             item.put("name", displayName);
             item.put("stage", p.getStage() != null ? p.getStage() : "需求确认");
@@ -226,9 +226,9 @@ public class SysReportServiceImpl implements ISysReportService
         {
             Map<String, Object> item = new HashMap<>();
             item.put("id", p.getId());
-            // 项目名称：客户名称+项目名称
+            // 项目名称：客户名称-项目名称
             String displayName = (p.getCustomer() != null && !p.getCustomer().isEmpty())
-                ? p.getCustomer() + "+" + p.getName()
+                ? p.getCustomer() + "-" + p.getName()
                 : p.getName();
             item.put("name", displayName);
             item.put("stage", "验收交付");
@@ -250,9 +250,9 @@ public class SysReportServiceImpl implements ISysReportService
         {
             Map<String, Object> item = new HashMap<>();
             item.put("id", p.getId());
-            // 项目名称：客户名称+项目名称
+            // 项目名称：客户名称-项目名称
             String displayName = (p.getCustomer() != null && !p.getCustomer().isEmpty())
-                ? p.getCustomer() + "+" + p.getName()
+                ? p.getCustomer() + "-" + p.getName()
                 : p.getName();
             item.put("name", displayName);
             item.put("stage", p.getStage() != null ? p.getStage() : "需求确认");
@@ -447,9 +447,9 @@ public class SysReportServiceImpl implements ISysReportService
                         Map<String, Object> item = new HashMap<>();
                         item.put("id", m.getId());
                         item.put("date", recordDateStr);
-                        // 项目名称：客户名称+项目名称
+                        // 项目名称：客户名称-项目名称
                         String displayName = (proj.getCustomer() != null && !proj.getCustomer().isEmpty())
-                            ? proj.getCustomer() + "+" + proj.getName()
+                            ? proj.getCustomer() + "-" + proj.getName()
                             : proj.getName();
                         item.put("projectName", displayName);
                         item.put("description", m.getDescription());
@@ -804,9 +804,9 @@ public class SysReportServiceImpl implements ISysReportService
         {
             Map<String, Object> item = new HashMap<>();
             item.put("id", p.getId());
-            // 项目名称：客户名称+项目名称
+            // 项目名称：客户名称-项目名称
             String displayName = (p.getCustomer() != null && !p.getCustomer().isEmpty())
-                ? p.getCustomer() + "+" + p.getName()
+                ? p.getCustomer() + "-" + p.getName()
                 : p.getName();
             item.put("name", displayName);
             item.put("stage", p.getStage() != null ? p.getStage() : "需求确认");
@@ -817,14 +817,34 @@ public class SysReportServiceImpl implements ISysReportService
             // 阶段状态
             String stageStatus = "pending";
             String stageDateInfo = "";
+            String weekChange = "";
             if ("已完成".equals(p.getStatus()))
             {
                 stageStatus = "completed";
                 stageDateInfo = "已完成 " + formatDate(p.getActualEndDate());
+                // 检查是否本周完成
+                if (p.getActualEndDate() != null)
+                {
+                    String completedDate = formatDate(p.getActualEndDate());
+                    if (completedDate.compareTo(startDate) >= 0 && completedDate.compareTo(endDate) <= 0)
+                    {
+                        weekChange = "验收通过";
+                    }
+                }
             }
             else if ("暂停".equals(p.getStatus()))
             {
+                stageStatus = "paused";
                 stageDateInfo = "已暂停";
+                // 检查是否本周暂停
+                if (p.getUpdateTime() != null)
+                {
+                    String pausedDate = formatDate(p.getUpdateTime());
+                    if (pausedDate.compareTo(startDate) >= 0 && pausedDate.compareTo(endDate) <= 0)
+                    {
+                        weekChange = "项目暂停";
+                    }
+                }
             }
             else if (p.getEndDate() != null)
             {
@@ -834,6 +854,12 @@ public class SysReportServiceImpl implements ISysReportService
                 {
                     stageStatus = "danger";
                     stageDateInfo = "已到期: " + formatDate(p.getEndDate());
+                    // 检查是否本周到期
+                    String expireDate = formatDate(p.getEndDate());
+                    if (expireDate.compareTo(startDate) >= 0 && expireDate.compareTo(endDate) <= 0)
+                    {
+                        weekChange = "已到期";
+                    }
                 }
                 else if (days <= 7)
                 {
@@ -847,7 +873,7 @@ public class SysReportServiceImpl implements ISysReportService
             }
             item.put("stageStatus", stageStatus);
             item.put("stageDateInfo", stageDateInfo);
-            item.put("weekChange", "");
+            item.put("weekChange", weekChange);
             projectProgress.add(item);
         }
         data.put("projectProgress", projectProgress);
@@ -859,7 +885,11 @@ public class SysReportServiceImpl implements ISysReportService
             Map<String, Object> item = new HashMap<>();
             item.put("id", i.getId());
             item.put("description", i.getDescription());
-            item.put("projectName", i.getProjectName());
+            // 项目名称：客户名称-项目名称
+            String issueProjectName = (i.getCustomer() != null && !i.getCustomer().isEmpty())
+                ? i.getCustomer() + "-" + i.getProjectName()
+                : i.getProjectName();
+            item.put("projectName", issueProjectName);
             item.put("severity", i.getSeverity());
             item.put("status", i.getStatus());
             issueList.add(item);
@@ -873,7 +903,11 @@ public class SysReportServiceImpl implements ISysReportService
             Map<String, Object> item = new HashMap<>();
             item.put("id", r.getId());
             item.put("description", r.getDescription());
-            item.put("projectName", r.getProjectName());
+            // 项目名称：客户名称-项目名称
+            String riskProjectName = (r.getCustomer() != null && !r.getCustomer().isEmpty())
+                ? r.getCustomer() + "-" + r.getProjectName()
+                : r.getProjectName();
+            item.put("projectName", riskProjectName);
             item.put("level", r.getLevel());
             item.put("status", r.getStatus());
             item.put("measure", r.getMeasure());
@@ -989,9 +1023,9 @@ public class SysReportServiceImpl implements ISysReportService
                         Map<String, Object> item = new HashMap<>();
                         item.put("id", m.getId());
                         item.put("date", recordDateStr);
-                        // 项目名称：客户名称+项目名称
+                        // 项目名称：客户名称-项目名称
                         String displayName = (proj.getCustomer() != null && !proj.getCustomer().isEmpty())
-                            ? proj.getCustomer() + "+" + proj.getName()
+                            ? proj.getCustomer() + "-" + proj.getName()
                             : proj.getName();
                         item.put("projectName", displayName);
                         item.put("description", m.getDescription());

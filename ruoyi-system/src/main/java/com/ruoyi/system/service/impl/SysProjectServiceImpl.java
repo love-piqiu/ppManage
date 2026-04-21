@@ -58,14 +58,16 @@ public class SysProjectServiceImpl implements ISysProjectService
     }
 
     /**
-     * 查询所有项目
+     * 查询所有项目（只返回下辖项目，用于问题/风险关联）
      *
      * @return 项目列表
      */
     @Override
     public List<SysProject> selectProjectAll()
     {
-        return projectMapper.selectProjectAll();
+        SysProject query = new SysProject();
+        query.setIsSubordinate("是");
+        return projectMapper.selectProjectList(query);
     }
 
     /**

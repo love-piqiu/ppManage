@@ -100,7 +100,8 @@ export default {
         '每日': 'daily',
         '每工作日': 'workday',
         '每周': 'weekly',
-        '每月': 'monthly'
+        '每月': 'monthly',
+        '每季': 'quarterly'
       }
       return map[this.task.cycle] || 'daily'
     },
@@ -116,6 +117,8 @@ export default {
         return `周${this.task.deadlineWeekday || '五'} ${this.task.deadlineTime || '17:00'}`
       } else if (this.task.cycle === '每月') {
         return `${this.task.deadlineDay || 5}日 ${this.task.deadlineTime || '12:00'}`
+      } else if (this.task.cycle === '每季') {
+        return `季度末 ${this.task.deadlineTime || '18:00'}`
       }
       return this.task.deadlineTime || '-'
     },
@@ -317,6 +320,10 @@ export default {
   &.monthly {
     background: #E0E7FF;
     color: #4338CA;
+  }
+  &.quarterly {
+    background: #FCE7F3;
+    color: #BE185D;
   }
 }
 

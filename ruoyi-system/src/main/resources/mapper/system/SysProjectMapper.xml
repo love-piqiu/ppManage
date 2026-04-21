@@ -86,7 +86,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <if test="stage != null and stage != ''">
             AND p.stage like concat('%', #{stage}, '%')
         </if>
-        order by p.start_date desc
+        <if test="isSubordinate != null and isSubordinate != ''">
+            AND p.is_subordinate = #{isSubordinate}
+        </if>
+        order by p.is_subordinate desc, p.start_date desc
     </select>
 
     <select id="selectProjectAll" resultMap="SysProjectResult">

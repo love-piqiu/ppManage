@@ -159,7 +159,9 @@
       "Bash(npm uninstall *)",
       "Bash(find /Users/qiuzhao/workspace/ppManage/ruoyi-ui/src/views/system -name \"*.vue\" -exec basename {} \\\\;)",
       "Bash(sudo mysql *)",
-      "Bash(grep -rn '$base-sidebar-width' '/Users/qiuzhao/workspace/ppManage/ruoyi-ui/src/assets/styles/*.scss')"
+      "Bash(grep -rn '$base-sidebar-width' '/Users/qiuzhao/workspace/ppManage/ruoyi-ui/src/assets/styles/*.scss')",
+      "Bash(git commit *)",
+      "WebFetch(domain:123.56.191.180)"
     ]
   }
 }

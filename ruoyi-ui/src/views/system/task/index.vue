@@ -136,14 +136,9 @@
         <el-form-item v-if="form.cycle === '每月'" label="截止日期" prop="deadlineDay">
           <el-input-number v-model="form.deadlineDay" :min="1" :max="28" />
         </el-form-item>
-        <el-form-item v-if="form.cycle === '每季'" label="截止季度日" prop="deadlineQuarterDay">
-          <el-select v-model="form.deadlineQuarterMonth" placeholder="选择季度末月" style="width: 120px;">
-            <el-option label="3月" value="3" />
-            <el-option label="6月" value="6" />
-            <el-option label="9月" value="9" />
-            <el-option label="12月" value="12" />
-          </el-select>
-          <el-input-number v-model="form.deadlineQuarterDay" :min="1" :max="28" style="margin-left: 8px;" />
+        <el-form-item v-if="form.cycle === '每季'" label="截止时间" prop="deadlineTime">
+          <el-time-picker v-model="form.deadlineTime" placeholder="选择截止时间" value-format="HH:mm:ss" />
+          <div class="el-form-item__tip" style="color: #909399; font-size: 12px; margin-top: 4px;">截止日期自动为季度最后一天</div>
         </el-form-item>
         <el-form-item label="状态" prop="status">
           <el-radio-group v-model="form.status">
@@ -166,7 +161,7 @@
 <script>
 import { listTask, getTask, addTask, updateTask, delTask, listInstance, completeTask, uncompleteTask, getPeriodStatistics, getOnceTaskStatistics, addInstance } from '@/api/system/task'
 import { listPersonAll } from '@/api/system/person'
-import { getCurrentWeek, getWeekDays, getWeekRange } from '@/utils/date'
+import { getCurrentWeek, getWeekDays, getWeekRange, isQuarterEndWeek } from '@/utils/date'
 import WeekSelector from './components/WeekSelector.vue'
 import StatCards from './components/StatCards.vue'
 import TaskCard from './components/TaskCard.vue'
@@ -251,7 +246,13 @@ export default {
         // 获取任务列表
         const taskRes = await listTask({ status: '启用' })
         const allTasks = taskRes.rows || []
-        this.cycleTasks = allTasks.filter(t => t.type === '周期性')
+        // 季度任务只在季度末周显示
+        this.cycleTasks = allTasks.filter(t => t.type === '周期性').filter(t => {
+          if (t.cycle === '每季') {
+            return isQuarterEndWeek(this.period)
+          }
+          return true
+        })
 
         // 获取周期性任务统计数据（依赖 period）
         const cycleRes = await getPeriodStatistics(this.period)
@@ -575,8 +576,8 @@ export default {
         deadlineDay: 5,
         deadlineWeekday: '五',
         deadlineDate: undefined,
-        deadlineQuarterMonth: '3',
-        deadlineQuarterDay: 25,
+        deadlineQuarterMonth: undefined,
+        deadlineQuarterDay: undefined,
         status: '启用',
         description: undefined
       }

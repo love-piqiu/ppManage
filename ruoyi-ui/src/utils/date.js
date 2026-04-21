@@ -295,3 +295,75 @@ export function getWeekDays(period) {
 
   return days
 }
+
+/**
+ * 获取当前季度的最后一天
+ * @param {number} year 年份
+ * @param {number} quarter 季度（1-4）
+ * @returns {Date}
+ */
+export function getQuarterLastDay(year, quarter) {
+  const endMonth = quarter * 3 // 3, 6, 9, 12
+  const lastDay = new Date(year, endMonth, 0).getDate() // 该月最后一天
+  return new Date(year, endMonth - 1, lastDay)
+}
+
+/**
+ * 判断某周是否是季度末周（包含季度最后一天）
+ * @param {string} period 格式：2026-W15
+ * @returns {boolean}
+ */
+export function isQuarterEndWeek(period) {
+  const range = getWeekRange(period)
+  const year = range.year
+
+  // 检查该周的每一天是否是某季度的最后一天
+  for (let quarter = 1; quarter <= 4; quarter++) {
+    const lastDay = getQuarterLastDay(year, quarter)
+    // 检查季度最后一天是否在该周范围内
+    if (lastDay >= range.monday && lastDay <= range.sunday) {
+      return true
+    }
+  }
+
+  // 检查跨年情况：12月31日可能在上年最后一周
+  const dec31PrevYear = new Date(year - 1, 11, 31)
+  if (dec31PrevYear >= range.monday && dec31PrevYear <= range.sunday) {
+    return true
+  }
+
+  return false
+}
+
+/**
+ * 获取某周包含的季度最后一天信息
+ * @param {string} period 格式：2026-W15
+ * @returns {object|null} { quarter, lastDayDate } 或 null
+ */
+export function getQuarterEndInfo(period) {
+  const range = getWeekRange(period)
+  const year = range.year
+
+  for (let quarter = 1; quarter <= 4; quarter++) {
+    const lastDay = getQuarterLastDay(year, quarter)
+    if (lastDay >= range.monday && lastDay <= range.sunday) {
+      return {
+        quarter,
+        year,
+        lastDayDate: formatDate(lastDay, 'yyyy-MM-dd')
+      }
+    }
+  }
+
+  // 检查跨年情况
+  const dec31PrevYear = new Date(year - 1, 11, 31)
+  if (dec31PrevYear >= range.monday && dec31PrevYear <= range.sunday) {
+    return {
+      quarter: 4,
+      year: year - 1,
+      lastDayDate: formatDate(dec31PrevYear, 'yyyy-MM-dd')
+    }
+  }
+
+  return null
+}
