@@ -76,10 +76,15 @@ npm run dev
 - [概要设计文档](docs/HLD.md)
 - [详细设计文档](docs/LLD.md)
 - [数据库设计](docs/DATABASE.md)
+- [API接口文档](docs/API.md)
 - [部署文档](docs/DEPLOYMENT.md)
 - [用户手册](docs/USER_MANUAL.md)
 - [测试计划](docs/TEST_PLAN.md)
 - [测试用例](docs/TEST_CASES.md)
+- [测试报告](docs/TEST_REPORT.md)
+- [代码规范文档](docs/CODE_STYLE.md)
+- [运维手册](docs/OPS_MANUAL.md)
+- [项目计划](docs/PROJECT_PLAN.md)
 - [变更日志](docs/CHANGELOG.md)
 
 ## 许可证
