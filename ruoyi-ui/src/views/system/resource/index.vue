@@ -93,8 +93,8 @@
         <div class="pp-card-skills">
           <span class="pp-skill-label">技能</span>
           <div class="pp-skill-tags">
-            <span class="pp-skill-tag" v-for="skill in person.skills" :key="skill.category + skill.skill">
-              {{ skill.category }}/{{ skill.skill }}
+            <span class="pp-skill-tag" v-for="skill in uniqueSkills(person.skills)" :key="skill">
+              {{ skill }}
             </span>
             <span class="pp-skill-tag empty" v-if="!person.skills || person.skills.length === 0">暂无技能记录</span>
           </div>
@@ -152,11 +152,18 @@
         </div>
         <div class="pp-detail-section">
           <h4>技能列表</h4>
-          <div class="pp-skill-list" v-if="detailSkills.length > 0">
-            <div class="pp-skill-item" v-for="skill in detailSkills" :key="skill.id">
-              <span class="pp-skill-category">{{ skill.category }}</span>
-              <span class="pp-skill-name">{{ skill.skill }}</span>
-              <button class="pp-skill-delete" @click="handleDeleteSkill(skill)">删除</button>
+          <div class="pp-skill-groups" v-if="groupedSkills(detailSkills).length > 0">
+            <div class="pp-skill-group" v-for="group in groupedSkills(detailSkills)" :key="group.category">
+              <div class="pp-skill-group-header">
+                <span class="pp-skill-group-title">{{ group.category }}</span>
+                <span class="pp-skill-group-count">{{ group.skills.length }}项</span>
+              </div>
+              <div class="pp-skill-group-items">
+                <div class="pp-skill-item" v-for="skill in group.skills" :key="skill.id">
+                  <span class="pp-skill-name">{{ skill.skill }}</span>
+                  <button class="pp-skill-delete" @click="handleDeleteSkill(skill)">删除</button>
+                </div>
+              </div>
             </div>
           </div>
           <div class="pp-empty-tip" v-else>暂无技能记录</div>
@@ -339,8 +346,18 @@ export default {
         this.$modal.msgWarning('请选择技能大类和具体技能');
         return;
       }
+      // 获取已存在的技能列表
+      const existingSkills = this.detailSkills.map(s => s.skill);
+      // 过滤出需要添加的新技能
+      const newSkills = this.skillForm.skills.filter(skill => !existingSkills.includes(skill));
+
+      if (newSkills.length === 0) {
+        this.$modal.msgWarning('所选技能已存在，请勿重复添加');
+        return;
+      }
+
       // 批量添加技能
-      const promises = this.skillForm.skills.map(skill => {
+      const promises = newSkills.map(skill => {
         return addPersonSkill({
           personId: this.skillForm.personId,
           category: this.skillForm.category,
@@ -348,7 +365,7 @@ export default {
         });
       });
       Promise.all(promises).then(() => {
-        this.$modal.msgSuccess('添加成功');
+        this.$modal.msgSuccess(`成功添加 ${newSkills.length} 个技能`);
         this.skillOpen = false;
         this.getList();
         this.loadOverview();
@@ -396,6 +413,39 @@ export default {
       if (status === '即将空闲') return 'soon';
       if (status === '忙碌') return 'busy';
       return 'pending';
+    },
+    uniqueSkills(skills) {
+      if (!skills || skills.length === 0) return [];
+      // 去重：使用 category/skill 作为唯一标识
+      const uniqueMap = new Map();
+      skills.forEach(s => {
+        const key = `${s.category}/${s.skill}`;
+        if (!uniqueMap.has(key)) {
+          uniqueMap.set(key, key);
+        }
+      });
+      return Array.from(uniqueMap.values());
+    },
+    groupedSkills(skills) {
+      if (!skills || skills.length === 0) return [];
+      // 按分类分组并去重
+      const groupMap = new Map();
+      skills.forEach(s => {
+        if (!groupMap.has(s.category)) {
+          groupMap.set(s.category, []);
+        }
+        // 检查是否已存在该技能（去重）
+        const existing = groupMap.get(s.category);
+        if (!existing.find(e => e.skill === s.skill)) {
+          existing.push(s);
+        }
+      });
+      // 转换为数组格式
+      const result = [];
+      groupMap.forEach((skillsArr, category) => {
+        result.push({ category, skills: skillsArr });
+      });
+      return result;
     }
   }
 };
@@ -871,11 +921,47 @@ export default {
   border-radius: 8px;
 }
 
+.pp-skill-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pp-skill-group {
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.pp-skill-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #F9FAFB;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.pp-skill-group-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2563EB;
+}
+
+.pp-skill-group-count {
+  font-size: 12px;
+  color: #6B7280;
+}
+
+.pp-skill-group-items {
+  padding: 8px 0;
+}
+
 .pp-skill-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px;
+  justify-content: space-between;
+  padding: 10px 16px;
   border-bottom: 1px solid #F3F4F6;
 
   &:last-child {

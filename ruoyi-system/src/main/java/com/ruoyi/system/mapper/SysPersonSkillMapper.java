@@ -82,4 +82,14 @@ public interface SysPersonSkillMapper
      * @return 结果
      */
     public int deletePersonSkillByPersonId(Long personId);
+
+    /**
+     * 检查技能是否已存在
+     *
+     * @param personId 人员ID
+     * @param category 技能大类
+     * @param skill 具体技能
+     * @return 已存在的记录数
+     */
+    public int checkSkillExists(Long personId, String category, String skill);
 }

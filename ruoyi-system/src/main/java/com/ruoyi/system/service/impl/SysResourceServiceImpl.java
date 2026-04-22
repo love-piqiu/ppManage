@@ -227,6 +227,12 @@ public class SysResourceServiceImpl implements ISysResourceService
     @Override
     public int insertPersonSkill(SysPersonSkill personSkill)
     {
+        // 检查是否已存在相同技能
+        int exists = personSkillMapper.checkSkillExists(personSkill.getPersonId(), personSkill.getCategory(), personSkill.getSkill());
+        if (exists > 0)
+        {
+            return 0; // 已存在，不重复添加
+        }
         return personSkillMapper.insertPersonSkill(personSkill);
     }
 
