@@ -11,6 +11,7 @@ import com.ruoyi.common.annotation.Excel.ColumnType;
 import com.ruoyi.common.core.domain.BaseEntity;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import com.ruoyi.system.domain.PersonProjectDetail;
 
 /**
  * 人员对象 sys_person
@@ -111,6 +112,9 @@ public class SysPerson extends BaseEntity
 
     /** 在建项目列表 */
     private List<String> projects;
+
+    /** 项目详情列表（用于详情页显示） */
+    private List<PersonProjectDetail> projectDetails;
 
     public Long getId()
     {
@@ -360,5 +364,15 @@ public class SysPerson extends BaseEntity
     public void setProjects(List<String> projects)
     {
         this.projects = projects;
+    }
+
+    public List<PersonProjectDetail> getProjectDetails()
+    {
+        return projectDetails;
+    }
+
+    public void setProjectDetails(List<PersonProjectDetail> projectDetails)
+    {
+        this.projectDetails = projectDetails;
     }
 }

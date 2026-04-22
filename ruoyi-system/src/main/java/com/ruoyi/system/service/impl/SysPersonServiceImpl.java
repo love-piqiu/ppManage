@@ -9,6 +9,8 @@ import com.ruoyi.common.constant.UserConstants;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.system.domain.SysPerson;
 import com.ruoyi.system.domain.SysPersonProject;
+import com.ruoyi.system.domain.SysProject;
+import com.ruoyi.system.domain.PersonProjectDetail;
 import com.ruoyi.system.mapper.SysPersonMapper;
 import com.ruoyi.system.mapper.SysPersonProjectMapper;
 import com.ruoyi.system.mapper.SysProjectMapper;
@@ -85,7 +87,7 @@ public class SysPersonServiceImpl implements ISysPersonService
     }
 
     /**
-     * 通过人员ID查询人员信息
+     * 通过人员ID查询人员信息（包含项目参与详情）
      *
      * @param id 人员ID
      * @return 人员信息
@@ -93,7 +95,38 @@ public class SysPersonServiceImpl implements ISysPersonService
     @Override
     public SysPerson selectPersonById(Long id)
     {
-        return personMapper.selectPersonById(id);
+        SysPerson person = personMapper.selectPersonById(id);
+        if (person != null)
+        {
+            // 查询人员参与的项目详情
+            List<SysPersonProject> personProjects = personProjectMapper.selectByPersonId(id);
+            List<String> projects = new ArrayList<>();
+            List<PersonProjectDetail> projectDetails = new ArrayList<>();
+            for (SysPersonProject pp : personProjects)
+            {
+                SysProject project = projectMapper.selectProjectById(pp.getProjectId());
+                if (project != null)
+                {
+                    // 在建项目列表（仅进行中的项目）
+                    if ("进行中".equals(project.getStatus()))
+                    {
+                        String displayName = (project.getCustomer() != null ? project.getCustomer() + "-" : "") + project.getName();
+                        projects.add(displayName);
+                    }
+                    // 项目详情列表（所有参与的项目）
+                    PersonProjectDetail detail = new PersonProjectDetail();
+                    detail.setName(project.getName());
+                    detail.setRole(pp.getRole());
+                    detail.setProgress(project.getProgress());
+                    detail.setStatus(project.getStatus());
+                    detail.setJoinDate(pp.getJoinDate());
+                    projectDetails.add(detail);
+                }
+            }
+            person.setProjects(projects);
+            person.setProjectDetails(projectDetails);
+        }
+        return person;
     }
 
     /**

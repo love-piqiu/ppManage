@@ -303,12 +303,12 @@
       <div class="pp-tab-content">
         <!-- 项目参与 -->
         <div v-show="detailTab === 'projects'">
-          <h3 class="pp-section-title">在建项目 ({{ (detailData.projects && detailData.projects.length) || 0 }}个)</h3>
-          <div class="pp-project-cards" v-if="detailData.projects && detailData.projects.length > 0">
-            <div class="pp-project-card" v-for="(proj, pi) in detailData.projects" :key="pi">
+          <h3 class="pp-section-title">在建项目 ({{ (detailData.projectDetails && detailData.projectDetails.length) || 0 }}个)</h3>
+          <div class="pp-project-cards" v-if="detailData.projectDetails && detailData.projectDetails.length > 0">
+            <div class="pp-project-card" v-for="(proj, pi) in detailData.projectDetails" :key="pi">
               <div class="pp-project-card-header">
                 <span class="pp-project-card-name">{{ proj.name }}</span>
-                <span class="pp-project-card-role">{{ proj.role }}</span>
+                <span class="pp-project-card-role">{{ proj.role || '-' }}</span>
               </div>
               <div class="pp-project-card-info">
                 <span>参与时间：{{ proj.joinDate || '-' }}</span>
